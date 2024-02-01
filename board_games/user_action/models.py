@@ -10,7 +10,7 @@ class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     return_period = models.DateField()
     opening_date = models.DateField()
-    closing_date = models.DateField()
+    closing_date = models.DateField(null=True)
 
     def __str__(self):
         return f'{self.user} | {self.game}'

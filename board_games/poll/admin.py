@@ -4,7 +4,10 @@ from django.utils.safestring import mark_safe
 
 from .models import Choice, Question
 
-admin.site.register(Choice)
+
+@admin.register(Choice)
+class ChoiceAdmin(admin.ModelAdmin):
+    list_display = ['question', 'choice_text', 'votes']
 
 
 @admin.register(Question)

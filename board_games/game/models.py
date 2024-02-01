@@ -23,7 +23,7 @@ class Category(models.Model):
 
 class BoardGame(models.Model):
     name = models.CharField(max_length=50)
-    description = models.ForeignKey(Description, on_delete=models.CASCADE)
+    description = models.ForeignKey(Description, on_delete=models.SET_NULL, blank=True, null=True)
     category = models.ManyToManyField(Category)
     publisher = models.CharField(max_length=50)
     cost = models.IntegerField()

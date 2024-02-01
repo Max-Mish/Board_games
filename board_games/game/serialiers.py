@@ -18,6 +18,8 @@ class BookingRequestSerializer(serializers.Serializer):
 
 
 class BookingResponseSerializer(serializers.ModelSerializer):
+    game = GamesSerializer()
+
     class Meta:
         model = Booking
         fields = "__all__"

@@ -40,4 +40,5 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('games/', include("game.urls")),
     path('user_actions/', include("user_action.urls")),
+    path('poll/', include("poll.urls")),
 ]

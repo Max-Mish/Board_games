@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 
 from .models import Game
-from .serialiers import GameSerializer
+from .serializers import GameSerializer
 
 
 class GameListViewSet(viewsets.ModelViewSet):

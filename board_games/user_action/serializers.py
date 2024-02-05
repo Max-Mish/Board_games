@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
+from game.serializers import GameSerializer
+from user.serializers import UserResponseShortSerializer
 from .models import Booking, Vote
-from game.serialiers import GameSerializer
 
 
 class BookingRequestSerializer(serializers.ModelSerializer):
@@ -15,6 +16,7 @@ class BookingRequestSerializer(serializers.ModelSerializer):
 
 class BookingResponseSerializer(serializers.ModelSerializer):
     game = GameSerializer()
+    user = UserResponseShortSerializer()
 
     class Meta:
         model = Booking
@@ -22,11 +24,13 @@ class BookingResponseSerializer(serializers.ModelSerializer):
 
 
 class VoteRequestSerializer(serializers.Serializer):
-    choice_id = serializers.IntegerField(required=True)
+    choice_ids = serializers.ListField(child=serializers.IntegerField(required=True))
     user_id = serializers.IntegerField(required=True)
 
 
 class VoteResponseSerializer(serializers.ModelSerializer):
+    user = UserResponseShortSerializer()
+
     class Meta:
         model = Vote
         fields = '__all__'

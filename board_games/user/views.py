@@ -3,7 +3,7 @@ from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 
 from .models import User
-from .serialiers import UserSerializer, UserRequestShortSerializer, UserResponseShortSerializer
+from .serializers import UserSerializer, UserRequestShortSerializer, UserResponseShortSerializer
 
 
 class UserListViewSet(viewsets.ModelViewSet):
@@ -14,7 +14,7 @@ class UserListViewSet(viewsets.ModelViewSet):
 class UserShortListViewSet(generics.GenericAPIView):
     @swagger_auto_schema(responses={200: UserResponseShortSerializer(many=True)})
     def get(self, request):
-        queryset = User.objects.all().order_by('-date_joined')
+        queryset = User.objects.all()
         return Response(data=UserResponseShortSerializer(queryset, many=True).data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(

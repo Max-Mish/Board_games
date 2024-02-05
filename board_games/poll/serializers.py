@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
-from .models import Question, Choice
 from user_action.models import Vote
-from user_action.serialiers import VoteResponseSerializer
+from user_action.serializers import VoteResponseSerializer
+from .models import Question, Choice
 
 
 class ChoiceRequestSerializer(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class ChoiceResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Choice
-        fields = ['id', 'question_id', 'choice_text', 'votes', 'user_votes', 'amount_per_choice']
+        fields = '__all__'
 
 
 class QuestionRequestSerializer(serializers.ModelSerializer):
@@ -32,7 +32,7 @@ class QuestionRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['question_text', 'picture', 'choices']
+        fields = '__all__'
 
 
 class QuestionResponseSerializer(serializers.ModelSerializer):
@@ -48,4 +48,4 @@ class QuestionResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['id', 'question_text', 'pub_date', 'picture', 'choices', 'amount_all']
+        fields = '__all__'

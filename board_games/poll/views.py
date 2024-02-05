@@ -3,7 +3,7 @@ from rest_framework import status, generics
 from rest_framework.response import Response
 
 from .models import Question, Choice
-from .serialiers import QuestionRequestSerializer, QuestionResponseSerializer
+from .serializers import QuestionRequestSerializer, QuestionResponseSerializer
 
 
 class QuestionListViewSet(generics.GenericAPIView):

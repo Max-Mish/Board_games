@@ -1,7 +1,6 @@
 from datetime import date
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets, generics, status
-from rest_framework import generics, mixins, permissions
+from rest_framework import status, generics
 from rest_framework.response import Response
 
 from .models import Booking
@@ -36,6 +35,6 @@ class BookingFilteredViewSet(generics.GenericAPIView):
         queryset = Booking.objects.all().order_by('-opening_date')
         queryset_filtered = [booking for booking in queryset if
                              (booking.closing_date and booking.return_period < booking.closing_date) or (
-                                         not booking.closing_date and booking.return_period < date.today())]
+                                     not booking.closing_date and booking.return_period < date.today())]
 
         return Response(data=BookingResponseSerializer(queryset_filtered, many=True).data, status=status.HTTP_200_OK)

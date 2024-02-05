@@ -1,9 +1,9 @@
-from rest_framework import viewsets, generics, status
+from rest_framework import viewsets
 
-from .models import BoardGame
-from .serialiers import GamesSerializer
+from .models import Game
+from .serialiers import GameSerializer
 
 
-class GamesViewSet(viewsets.ModelViewSet):
-    serializer_class = GamesSerializer
-    queryset = BoardGame.objects.all().order_by("-id")
+class GameListViewSet(viewsets.ModelViewSet):
+    serializer_class = GameSerializer
+    queryset = Game.objects.all().order_by('-id')

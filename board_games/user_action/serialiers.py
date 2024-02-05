@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import Booking, Vote
-from game.serialiers import GamesSerializer
+from game.serialiers import GameSerializer
 
 
 class BookingRequestSerializer(serializers.ModelSerializer):
@@ -14,11 +14,11 @@ class BookingRequestSerializer(serializers.ModelSerializer):
 
 
 class BookingResponseSerializer(serializers.ModelSerializer):
-    game = GamesSerializer()
+    game = GameSerializer()
 
     class Meta:
         model = Booking
-        fields = "__all__"
+        fields = '__all__'
 
 
 class VoteRequestSerializer(serializers.Serializer):
@@ -29,4 +29,4 @@ class VoteRequestSerializer(serializers.Serializer):
 class VoteResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vote
-        fields = "__all__"
+        fields = '__all__'

@@ -21,7 +21,7 @@ class Category(models.Model):
         verbose_name_plural = 'Categories'
 
 
-class BoardGame(models.Model):
+class Game(models.Model):
     name = models.CharField(max_length=50)
     description = models.ForeignKey(Description, on_delete=models.SET_NULL, blank=True, null=True)
     category = models.ManyToManyField(Category)

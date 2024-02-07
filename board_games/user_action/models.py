@@ -1,12 +1,12 @@
 from django.db import models
-from django.contrib.auth.models import User
 
-from game.models import BoardGame
+from user.models import User
+from game.models import Game
 from poll.models import Choice
 
 
 class Booking(models.Model):
-    game = models.ForeignKey(BoardGame, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     return_period = models.DateField()
     opening_date = models.DateField()

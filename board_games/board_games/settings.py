@@ -36,8 +36,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'drf_yasg',
-    # 'user.apps.UserConfig',
-    # 'user',
     'poll',
     'game',
     'user_action',
@@ -55,7 +53,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'board_games.urls'
-REST_FRAMEWORK = { 'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema' }
+REST_FRAMEWORK = {'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'}
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -86,8 +84,6 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
-
-# AUTH_USER_MODEL = 'user.CustomUser'
 
 AUTH_PASSWORD_VALIDATORS = [
     {

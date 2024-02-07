@@ -9,7 +9,7 @@ from .serializers import BookingRequestSerializer, BookingResponseSerializer, Vo
     VoteResponseSerializer
 
 
-class BookingListViewSet(generics.GenericAPIView):
+class BookingAPIView(generics.GenericAPIView):
     @swagger_auto_schema(responses={200: BookingResponseSerializer(many=True)})
     def get(self, request):
         queryset = Booking.objects.all().order_by('-opening_date')
@@ -21,28 +21,29 @@ class BookingListViewSet(generics.GenericAPIView):
     def post(self, request):
         serializer = BookingRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-
-        booking = Booking(user_id=data['user_id'], game_id=data['game_id'], opening_date=data['opening_date'],
-                          return_period=data['return_period'])
-        booking.save()
+        serializer.save()
+        # data = serializer.validated_data
+        #
+        # booking = Booking(user_id=data['user_id'], game_id=data['game_id'], opening_date=data['opening_date'],
+        #                   return_date=data['return_date'])
+        # booking.save()
         return Response(
-            data=BookingResponseSerializer(booking).data, status=status.HTTP_201_CREATED
+            data=serializer.data, status=status.HTTP_201_CREATED
         )
 
 
-class BookingFilteredViewSet(generics.GenericAPIView):
+class BookingFilteredAPIView(generics.GenericAPIView):
     @swagger_auto_schema(responses={200: BookingResponseSerializer(many=True)})
     def get(self, request):
         queryset = Booking.objects.all().order_by('-opening_date')
         queryset_filtered = [booking for booking in queryset if
-                             (booking.closing_date and booking.return_period < booking.closing_date) or (
-                                     not booking.closing_date and booking.return_period < date.today())]
+                             (booking.closing_date and booking.return_date < booking.closing_date) or (
+                                     not booking.closing_date and booking.return_date < date.today())]
 
         return Response(data=BookingResponseSerializer(queryset_filtered, many=True).data, status=status.HTTP_200_OK)
 
 
-class VoteListViewSet(generics.GenericAPIView):
+class VoteAPIView(generics.GenericAPIView):
     @swagger_auto_schema(responses={200: VoteResponseSerializer(many=True)})
     def get(self, request):
         queryset = Vote.objects.all().order_by('-id')
@@ -54,6 +55,7 @@ class VoteListViewSet(generics.GenericAPIView):
     def post(self, request):
         serializer = VoteRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         data = serializer.validated_data
 
         votes = [Vote(choice_id=choice, user_id=data['user_id']).save() for choice in data['choice_ids']]

@@ -1,7 +1,8 @@
 from django.urls import path
 
-from .views import QuestionListViewSet
+from .views import QuestionAPIView
 
+app_name = 'poll'
 urlpatterns = [
-    path('poll/question/', QuestionListViewSet.as_view())
+    path('poll/question/', QuestionAPIView.as_view(), name='question')
 ]

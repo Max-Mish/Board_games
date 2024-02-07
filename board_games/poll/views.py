@@ -6,7 +6,7 @@ from .models import Question, Choice
 from .serializers import QuestionRequestSerializer, QuestionResponseSerializer
 
 
-class QuestionListViewSet(generics.GenericAPIView):
+class QuestionAPIView(generics.GenericAPIView):
     @swagger_auto_schema(responses={200: QuestionResponseSerializer(many=True)})
     def get(self, request):
         queryset = Question.objects.all().order_by('-pub_date')

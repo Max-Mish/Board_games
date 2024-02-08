@@ -1,7 +1,5 @@
 from django.db import models
 
-# from .managers import GameManager
-
 
 class Description(models.Model):
     DIFFICULTY_CHOICES = {
@@ -37,7 +35,6 @@ class Game(models.Model):
     category = models.ManyToManyField(Category)
     publisher = models.CharField(max_length=50)
     cost = models.IntegerField()
-
 
     def __str__(self):
         return self.name

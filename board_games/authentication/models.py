@@ -18,5 +18,29 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomUserManager()
 
+    # def get_form(self, request, obj=None, **kwargs):
+    #     form = super().get_form(request, obj, **kwargs)
+    #     is_superuser = request.user.is_superuser
+    #
+    #     if (
+    #             not is_superuser
+    #             and obj is not None
+    #             and obj == request.user
+    #     ):
+    #         form.base_fields['is_superuser'].disabled = True
+    #         form.base_fields['is_active'].disabled = True
+    #         form.base_fields['is_staff'].disabled = True
+    #         form.base_fields['created_at'].disabled = True
+    #
+    #     return form
+
     def __str__(self):
         return self.email
+
+    class Meta:
+        permissions = [
+            (
+                "view_profile_info",
+                "Can view profile information"
+            ),
+        ]

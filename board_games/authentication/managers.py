@@ -1,4 +1,4 @@
-from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.models import BaseUserManager, Group
 
 
 class CustomUserManager(BaseUserManager):
@@ -12,6 +12,9 @@ class CustomUserManager(BaseUserManager):
         user = self.model(username=username, email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save()
+
+        user_group = Group.objects.get(name='User')
+        user_group.user_set.add(user)
 
         return user
 

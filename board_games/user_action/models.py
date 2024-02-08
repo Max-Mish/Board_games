@@ -20,6 +20,14 @@ class Booking(models.Model):
     def __str__(self):
         return f'{self.user} | {self.game}'
 
+    class Meta:
+        permissions = [
+            (
+                "view_filtered_booking",
+                "Can view filtered booking"
+            ),
+        ]
+
 
 class Vote(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)

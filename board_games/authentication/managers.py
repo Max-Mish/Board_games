@@ -1,5 +1,7 @@
 from django.contrib.auth.models import BaseUserManager, Group
 
+from .services import RefreshTokenExt, GroupsService
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password, **extra_fields):
@@ -9,13 +11,17 @@ class CustomUserManager(BaseUserManager):
         if email is None:
             raise TypeError('Users must have an email address.')
 
-        user = self.model(username=username, email=self.normalize_email(email), **extra_fields)
+        user = self.model(username=username, email=self.normalize_email(email), refresh_token='temp', **extra_fields)
         user.set_password(password)
         user.save()
+        refresh = RefreshTokenExt().for_user(user)
+        user.refresh_token = refresh
+        user.access_token = refresh.access_token
+        user.save()
 
+        GroupsService().create_update_groups()
         user_group = Group.objects.get(name='User')
-        user_group.user_set.add(user)
-
+        user.groups.add(user_group)
         return user
 
     def create_superuser(self, username, email, password, **extra_fields):

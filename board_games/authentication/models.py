@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Permission, Group
 from django.db import models
 
 from .managers import CustomUserManager
@@ -12,6 +12,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     cover_photo = models.URLField(blank=True, null=True)
+    groups = models.ManyToManyField(Group)
+    user_permissions = models.ManyToManyField(Permission)
+    refresh_token = models.TextField(unique=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']

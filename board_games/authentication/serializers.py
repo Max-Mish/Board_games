@@ -1,6 +1,8 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import CustomUser
 
@@ -10,10 +12,42 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
 
+        token["user_id"] = user.pk
         token['username'] = user.username
         token['email'] = user.email
 
+        user.refresh_token = token
+        user.access_token = token.access_token
+        user.save()
+
         return token
+
+
+class JWTRefreshSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField()
+    access_token = serializers.CharField(read_only=True)
+    token_class = RefreshToken
+
+    def validate(self, attrs):
+        refresh = self.token_class(attrs["refresh_token"])
+
+        data = {"access_token": str(refresh.access_token)}
+
+        if api_settings.ROTATE_REFRESH_TOKENS:
+            if api_settings.BLACKLIST_AFTER_ROTATION:
+                try:
+                    refresh.blacklist()
+                except AttributeError:
+                    pass
+
+            refresh.set_jti()
+            refresh.set_exp()
+            refresh.set_iat()
+
+            data["refresh_token"] = str(refresh)
+            user_id = refresh.access_token.get("user_id")
+            CustomUser.objects.filter(id=user_id).update(refresh_token=str(refresh))
+        return data
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -47,6 +81,27 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = '__all__'
+
+        # def update(self, instance, validated_data):
+        #     password = validated_data.pop('password', None)
+        #
+        #     # user_changes = ('email', 'cover_photo', 'is_active')
+        #     # admin_changes = ('is_staff', 'is_superuser')
+        #
+        #     # for key, value in validated_data.items():
+        #     #     if key in user_changes or (key in admin_changes and instance.is_superuser):
+        #     #         setattr(instance, key, value)
+        #     #     else:
+        #     #         raise serializers.ValidationError('This field can not be changed')
+        #
+        #     instance = super().update(instance, validated_data)
+        #
+        #     if password is not None:
+        #         instance.set_password(password)
+        #
+        #     instance.save()
+        #
+        #     return instance
 
 
 class ProfileInfoSerializer(serializers.ModelSerializer):
@@ -91,8 +146,8 @@ class ProfileInfoSerializer(serializers.ModelSerializer):
 #             'username': user.username,
 #             'token': user.token
 #         }
-
-
+#
+#
 # class UserSerializer(serializers.ModelSerializer):
 #     password = serializers.CharField(
 #         max_length=128,

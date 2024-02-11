@@ -42,4 +42,5 @@ urlpatterns = [
     path('games/', include('game.urls', namespace='game')),
     path('user_actions/', include('user_action.urls', namespace='user_action')),
     path('polls/', include('poll.urls', namespace='poll')),
+    path('payment_accounts/', include('payment_account.urls', namespace='payment_account')),
 ]

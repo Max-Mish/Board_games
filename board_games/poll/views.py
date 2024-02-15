@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import permission_required
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, generics
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Question, Choice
@@ -9,6 +10,7 @@ from .serializers import QuestionRequestSerializer, QuestionResponseSerializer
 
 
 class QuestionAPIView(generics.GenericAPIView):
+    permission_classes = (IsAuthenticated,)
     view_permissions = (
         'poll.view_question', 'poll.view_choice', 'user_action.view_vote', 'authentication.view_profile_info'
     )

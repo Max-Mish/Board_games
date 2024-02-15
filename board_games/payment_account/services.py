@@ -11,6 +11,7 @@ from yookassa import Configuration, Payment
 from yookassa.client import ApiClient
 from yookassa.domain.common import HttpVerb
 
+from purchase.models import Invoice
 from .models import Account, BalanceChange, PaymentCommission
 
 env = Env()
@@ -85,9 +86,9 @@ class PaymentCalculation:
 
 def request_balance_deposit_url(balance_increase_data):
     user_account, _ = Account.objects.get_or_create(user_uuid=balance_increase_data['user_uuid'])
-    amount = balance_increase_data.get('amount')
-    value = amount.get('value')
-    currency = amount.get('currency')
+    amount = balance_increase_data['amount']
+    value = amount['value']
+    currency = amount['currency']
 
     balance_change = BalanceChange.objects.create(
         account_id=user_account,
@@ -97,8 +98,8 @@ def request_balance_deposit_url(balance_increase_data):
     )
 
     value_with_commission = PaymentCalculation(
-        payment_type=balance_increase_data.get('payment_type'),
-        payment_service=balance_increase_data.get('payment_service'),
+        payment_type=balance_increase_data['payment_type'],
+        payment_service=balance_increase_data['payment_service'],
         payment_amount=value,
     ).calculate_payment_with_commission()
 
@@ -108,11 +109,11 @@ def request_balance_deposit_url(balance_increase_data):
             'currency': currency,
         },
         'payment_method_data': {
-            'type': balance_increase_data.get('payment_type'),
+            'type': balance_increase_data['payment_type'],
         },
         'confirmation': {
             'type': 'redirect',
-            'return_url': balance_increase_data.get('return_url'),
+            'return_url': balance_increase_data['return_url'],
         },
         'metadata': {
             'table_id': balance_change.pk,
@@ -126,7 +127,7 @@ def request_balance_deposit_url(balance_increase_data):
     return payment.confirmation.confirmation_url
 
 
-class YookassaService():
+class YookassaService:
     def __init__(self, yookassa_response):
         self.yookassa_response = yookassa_response
 
@@ -139,9 +140,10 @@ class YookassaService():
             del parsed_data['balance_object']
             return
 
-        if parsed_data['invoice'] is not None:
-            parsed_data['invoice'].is_paid = True
-            parsed_data['invoice'].save()
+        if 'invoice' in parsed_data:
+            if parsed_data['invoice'] is not None:
+                parsed_data['invoice'].is_paid = True
+                parsed_data['invoice'].save()
         return parsed_data
 
     def parse_response(self):
@@ -154,7 +156,6 @@ class YookassaService():
             'account': payer_account,
             'balance_object': balance_change_object,
             'income_amount': payment_body.get('income_amount')['value'],
-            'invoice': None
         }
         if (
                 'invoice_id' not in payment_body['metadata']
@@ -162,9 +163,9 @@ class YookassaService():
         ):
             return response_data
 
-        # invoice = Invoice.objects.get(pk=payment_body.metadata['invoice_id'])
-        # response_data['invoice'] = invoice
-        # return response_data
+        invoice = Invoice.objects.get(pk=payment_body['metadata']['invoice_id'])
+        response_data['invoice'] = invoice
+        return response_data
 
 
 def check_yookassa_response(yookassa_data, yookassa_status):
@@ -192,9 +193,9 @@ def check_yookassa_response(yookassa_data, yookassa_status):
         )
         return Response(404)
 
-    if (yookassa_data.get('income_amount').get('value') != response.get('income_amount').get('value')) or \
+    if (str(yookassa_data.get('income_amount').get('value')) != response.get('income_amount').get('value')) or \
             (yookassa_data.get('income_amount').get('currency') != response.get('income_amount').get('currency')) or \
-            (yookassa_data.get('amount').get('value') != response.get('amount').get('value')) or \
+            (str(yookassa_data.get('amount').get('value')) != response.get('amount').get('value')) or \
             (yookassa_data.get('amount').get('currency') != response.get('amount').get('currency')):
         rollbar.report_message(
             'Amount is not valid',
@@ -202,8 +203,8 @@ def check_yookassa_response(yookassa_data, yookassa_status):
         )
         return Response(404)
 
-    if (yookassa_data.get('metadata').get('account_id') != response.get('metadata').get('user_id')) or \
-            (yookassa_data.get('metadata').get('balance_change_id') != response.get('metadata').get('table_id')):
+    if (str(yookassa_data.get('metadata').get('account_id')) != response.get('metadata').get('user_id')) or \
+            (str(yookassa_data.get('metadata').get('balance_change_id')) != response.get('metadata').get('table_id')):
         rollbar.report_message(
             'Metadata is not valid',
             'warning',
@@ -213,28 +214,7 @@ def check_yookassa_response(yookassa_data, yookassa_status):
     return True
 
 
-# {'id': '2d5b0829-000f-5000-8000-165a2ecdc84d', 'status': 'succeeded', 'amount': {'value': '414.51', 'currency': 'RUB'},
-#  'income_amount': {'value': '400.00', 'currency': 'RUB'}, 'description': 'Пополнение на 400.00',
-#  'recipient': {'account_id': '332026', 'gateway_id': '2190794'},
-#  'payment_method': {'type': 'bank_card', 'id': '2d5b0829-000f-5000-8000-165a2ecdc84d', 'saved': False,
-#                     'title': 'Bank card *4444',
-#                     'card': {'first6': '555555', 'last4': '4444', 'expiry_year': '2011', 'expiry_month': '11',
-#                              'card_type': 'MasterCard', 'issuer_country': 'US'}},
-#  'captured_at': '2024-02-11T16:23:23.328Z', 'created_at': '2024-02-11T16:23:06.001Z', 'test': True,
-#  'refunded_amount': {'value': '0.00', 'currency': 'RUB'}, 'paid': True, 'refundable': True,
-#  'metadata': {'table_id': '17', 'user_id': '1'},
-#  'authorization_details': {'rrn': '157261377829532', 'auth_code': '831830',
-#                            'three_d_secure': {'applied': False, 'method_completed': False,
-#                                               'challenge_completed': False}}}
-
-# OrderedDict({'id_': UUID('2d5b0829-000f-5000-8000-165a2ecdc84d'),
-#              'income_amount': OrderedDict({'currency': 'RUB', 'value': Decimal('400.00')}),
-#              'amount': OrderedDict({'currency': 'RUB', 'value': Decimal('414.51')}),
-#              'description': 'Пополнение на 400.00', 'metadata': {'account_id': 1, 'balance_change_id': 16},
-#              'payment_method': 'bank_card'})
-
-
-def add_to_db_payout_info(parsed_data):
+def add_to_db_balance_change(parsed_data):
     balance_change_object = parsed_data['balance_object']
     amount = Decimal(parsed_data['income_amount'])
     with transaction.atomic():
@@ -255,14 +235,10 @@ def proceed_payment_response(income_data, payment_service):
         parsed_data = YookassaService(income_data).handel_payment_response()
     if parsed_data is None:
         return False
-    add_to_db_payout_info(parsed_data)
-    if parsed_data['invoice'] is None:
-        return True
-
-    # execute_invoice_operations(
-    #     invoice_instance=parsed_data.invoice,
-    #     payer_account=parsed_data.account,
-    #     decrease_amount=parsed_data.income_amount,
-    # )
-    #
-    # return True
+    if 'invoice' not in parsed_data:
+        add_to_db_balance_change(parsed_data)
+    else:
+        balance_change_object = parsed_data['balance_object']
+        balance_change_object.is_accepted = True
+        balance_change_object.save()
+    return True

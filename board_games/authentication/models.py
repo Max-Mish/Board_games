@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Permission, Group
 from django.db import models
 
@@ -5,6 +7,8 @@ from .managers import CustomUserManager
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(db_index=True, max_length=255, unique=True)
     email = models.EmailField(db_index=True, unique=True)
     is_active = models.BooleanField(default=True)
@@ -14,28 +18,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     cover_photo = models.URLField(blank=True, null=True)
     groups = models.ManyToManyField(Group)
     user_permissions = models.ManyToManyField(Permission)
-    refresh_token = models.TextField(unique=True)
+    refresh_token = models.TextField(blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
     objects = CustomUserManager()
-
-    # def get_form(self, request, obj=None, **kwargs):
-    #     form = super().get_form(request, obj, **kwargs)
-    #     is_superuser = request.user.is_superuser
-    #
-    #     if (
-    #             not is_superuser
-    #             and obj is not None
-    #             and obj == request.user
-    #     ):
-    #         form.base_fields['is_superuser'].disabled = True
-    #         form.base_fields['is_active'].disabled = True
-    #         form.base_fields['is_staff'].disabled = True
-    #         form.base_fields['created_at'].disabled = True
-    #
-    #     return form
 
     def __str__(self):
         return self.email

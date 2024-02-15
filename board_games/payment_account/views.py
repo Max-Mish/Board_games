@@ -1,31 +1,19 @@
-import json
-
 import rollbar
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, generics, viewsets
 from rest_framework.generics import CreateAPIView, get_object_or_404
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
 from .models import Account
 from .serializers import CalculateCommissionSerializer, BalanceIncreaseSerializer, AccountSerializer, UUIDSerializer, \
     BalanceSerializer, YookassaPaymentAcceptanceSerializer
-from .services import payment_acceptance, PaymentCalculation, request_balance_deposit_url, check_yookassa_response, \
+from .services import PaymentCalculation, request_balance_deposit_url, check_yookassa_response, \
     proceed_payment_response
 
 
-class CreatePaymentAcceptanceAPIView(CreateAPIView):
-
-    @swagger_auto_schema(
-        responses={200: 'Payment succeeded', 404: 'Payment canceled'})
-    def post(self, request, *args, **kwargs):
-        response = json.loads(request.body)
-
-        if payment_acceptance(response):
-            return Response(200)
-        return Response(404)
-
-
 class CalculatePaymentCommissionAPIView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
     serializer_class = CalculateCommissionSerializer
 
     @swagger_auto_schema(request_body=CalculateCommissionSerializer(),
@@ -44,6 +32,7 @@ class CalculatePaymentCommissionAPIView(CreateAPIView):
 
 
 class BalanceIncreaseAPIView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
     serializer_class = BalanceIncreaseSerializer
 
     @swagger_auto_schema(request_body=BalanceIncreaseSerializer(),
@@ -52,6 +41,7 @@ class BalanceIncreaseAPIView(CreateAPIView):
         serializer = BalanceIncreaseSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        data['user_uuid'] = request.user.pk
 
         confirmation_url = request_balance_deposit_url(data)
         return Response(
@@ -61,29 +51,25 @@ class BalanceIncreaseAPIView(CreateAPIView):
 
 
 class UserCreateAPIView(generics.GenericAPIView):
-    @swagger_auto_schema(request_body=AccountSerializer(), responses={200: AccountSerializer()})
+    permission_classes = (IsAuthenticated,)
+
+    @swagger_auto_schema(responses={200: AccountSerializer()})
     def post(self, request):
-        serializer = AccountSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-        uuid = data.get('user_uuid')
-        if Account.objects.filter(user_uuid=uuid).exists():
+        user_uuid = request.user.pk
+        if Account.objects.filter(user_uuid=user_uuid).exists():
             return Response(
                 {'error': 'A user with this UUID already exists'},
                 status=status.HTTP_409_CONFLICT,
             )
-        serializer.save()
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        account = Account.objects.create(user_uuid=user_uuid)
+        return Response(data=AccountSerializer(account).data, status=status.HTTP_201_CREATED)
 
 
-class BalanceViewSet(viewsets.ViewSet):
-    @swagger_auto_schema(responses={200: BalanceSerializer()})
-    def retrieve(self, request, user_uuid=None):
-        account = get_object_or_404(Account, user_uuid=user_uuid)
-        return Response(BalanceSerializer(account).data)
+class BalancesAPIView(generics.GenericAPIView):
+    permission_classes = (IsAdminUser,)
 
     @swagger_auto_schema(request_body=UUIDSerializer(), responses={200: BalanceSerializer(many=True)})
-    def list(self, request):
+    def post(self, request):
         serializer = UUIDSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -92,6 +78,16 @@ class BalanceViewSet(viewsets.ViewSet):
         balance_list = list(Account.objects.filter(user_uuid__in=uuid_list))
 
         return Response(BalanceSerializer(balance_list, many=True).data)
+
+
+class BalanceAPIView(generics.GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    @swagger_auto_schema(responses={200: BalanceSerializer()})
+    def get(self, request):
+        user_uuid = request.user.pk
+        account = get_object_or_404(Account, user_uuid=user_uuid)
+        return Response(BalanceSerializer(account).data)
 
 
 class YookassaPaymentAcceptanceView(viewsets.GenericViewSet):
@@ -118,4 +114,8 @@ class YookassaPaymentAcceptanceView(viewsets.GenericViewSet):
             )
             if payment_status is True:
                 return Response(200)
+        rollbar.report_message(
+            'Payment proceed gone wrong',
+            'warning',
+        )
         return Response(404)

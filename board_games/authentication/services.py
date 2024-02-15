@@ -1,15 +1,4 @@
 from django.contrib.auth.models import Group, Permission
-from rest_framework_simplejwt.tokens import RefreshToken
-
-
-class RefreshTokenExt(RefreshToken):
-    @classmethod
-    def for_user(cls, user):
-        token = super(RefreshTokenExt, cls).for_user(user)
-        token["user_id"] = user.pk
-        token["username"] = user.username
-        token["email"] = user.email
-        return token
 
 
 class GroupsService:

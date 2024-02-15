@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import permission_required
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, generics
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Game, Category, Description
@@ -9,6 +10,7 @@ from .serializers import GameRequestSerializer, GameResponseSerializer, Category
 
 
 class GameAPIView(generics.GenericAPIView):
+    permission_classes = (IsAuthenticated,)
     view_permissions = ('game.view_game', 'game.view_description', 'game.view_category')
     add_permissions = ('game.add_game', 'game.add_description', *view_permissions)
 
@@ -51,6 +53,7 @@ class GameAPIView(generics.GenericAPIView):
 
 
 class CategoryAPIView(generics.GenericAPIView):
+    permission_classes = (IsAuthenticated,)
     view_permissions = ('game.view_category',)
     add_permissions = ('game.add_game', 'game.add_description', *view_permissions)
 

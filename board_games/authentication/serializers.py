@@ -12,15 +12,27 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
 
-        token["user_id"] = user.pk
+        token["user_id"] = str(user.pk)
         token['username'] = user.username
         token['email'] = user.email
 
         user.refresh_token = token
-        user.access_token = token.access_token
         user.save()
 
         return token
+
+
+class BlacklistRefreshSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField()
+    access_token = serializers.CharField(read_only=True)
+    token_class = RefreshToken
+
+    def validate(self, attrs):
+        refresh = self.token_class(attrs["refresh_token"])
+        refresh.blacklist()
+        user_id = refresh.access_token.get("user_id")
+        CustomUser.objects.filter(id=user_id).update(refresh_token=None)
+        return 'Logged Out'
 
 
 class JWTRefreshSerializer(serializers.Serializer):
@@ -77,31 +89,38 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return CustomUser.objects.create_user(**validated_data)
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        max_length=128,
+        min_length=8,
+        write_only=True,
+        required=False,
+        validators=[validate_password],
+    )
+
+    password_repeat = serializers.CharField(write_only=True, required=False)
+    email = serializers.EmailField(required=False)
+    username = serializers.CharField(required=False)
+    is_active = serializers.BooleanField(required=False)
+    cover_photo = serializers.URLField(required=False)
+
     class Meta:
         model = CustomUser
-        fields = '__all__'
+        fields = ['email', 'username', 'cover_photo', 'password', 'is_active', 'cover_photo', 'password_repeat']
 
-        # def update(self, instance, validated_data):
-        #     password = validated_data.pop('password', None)
-        #
-        #     # user_changes = ('email', 'cover_photo', 'is_active')
-        #     # admin_changes = ('is_staff', 'is_superuser')
-        #
-        #     # for key, value in validated_data.items():
-        #     #     if key in user_changes or (key in admin_changes and instance.is_superuser):
-        #     #         setattr(instance, key, value)
-        #     #     else:
-        #     #         raise serializers.ValidationError('This field can not be changed')
-        #
-        #     instance = super().update(instance, validated_data)
-        #
-        #     if password is not None:
-        #         instance.set_password(password)
-        #
-        #     instance.save()
-        #
-        #     return instance
+    def validate(self, attrs):
+        try:
+            if attrs['password'] != attrs['password_repeat']:
+                raise serializers.ValidationError(
+                    {"password": "Password fields didn't match."})
+
+            del attrs['password_repeat']
+            return attrs
+        except KeyError:
+            if 'password' in attrs or 'password_repeat' in attrs:
+                raise serializers.ValidationError("No password repeat field.")
+            else:
+                return attrs
 
 
 class ProfileInfoSerializer(serializers.ModelSerializer):
@@ -146,29 +165,3 @@ class ProfileInfoSerializer(serializers.ModelSerializer):
 #             'username': user.username,
 #             'token': user.token
 #         }
-#
-#
-# class UserSerializer(serializers.ModelSerializer):
-#     password = serializers.CharField(
-#         max_length=128,
-#         min_length=8,
-#         write_only=True
-#     )
-#
-#     class Meta:
-#         model = CustomUser
-#         fields = ('email', 'username', 'password', 'token',)
-#         read_only_fields = ('token',)
-#
-#     def update(self, instance, validated_data):
-#         password = validated_data.pop('password', None)
-#
-#         for key, value in validated_data.items():
-#             setattr(instance, key, value)
-#
-#         if password is not None:
-#             instance.set_password(password)
-#
-#         instance.save()
-#
-#         return instance

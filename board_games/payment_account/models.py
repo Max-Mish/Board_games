@@ -1,20 +1,19 @@
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.shortcuts import get_object_or_404
-from djmoney.models.fields import MoneyField
-from moneyed import Money
+from djmoney.models import fields
 from yookassa.domain.common import PaymentMethodType
 
 
 class Account(models.Model):
     user_uuid = models.UUIDField(unique=True, editable=False, db_index=True)
-    balance = MoneyField(
+    balance = fields.MoneyField(
         verbose_name=None,
         name=None,
         max_digits=11,
         default_currency='RUB',
         decimal_places=2,
-        default=Money('0.00', 'RUB'),
+        default=fields.Money('0.00', 'RUB'),
         validators=[MinValueValidator(0, message='Insufficient Funds')]
     )
 
@@ -28,9 +27,9 @@ class Account(models.Model):
                 pk=pk,
             )
             if operation_type == 'DEPOSIT':
-                account.balance += Money(amount, 'RUB')
+                account.balance += fields.Money(amount, 'RUB')
             elif operation_type == 'WITHDRAW':
-                account.balance -= Money(amount, 'RUB')
+                account.balance -= fields.Money(amount, 'RUB')
             account.save()
         return account
 

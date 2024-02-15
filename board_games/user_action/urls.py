@@ -1,9 +1,10 @@
 from django.urls import path
 
-from .views import BookingListViewSet, BookingFilteredViewSet, VoteListViewSet
+from .views import BookingAPIView, BookingFilteredAPIView, VoteAPIView
 
+app_name = 'user_action'
 urlpatterns = [
-    path('user_action/booking/', BookingListViewSet.as_view()),
-    path('user_action/booking/filtered/', BookingFilteredViewSet.as_view()),
-    path('user_action/vote/', VoteListViewSet.as_view()),
+    path('user_action/booking/', BookingAPIView.as_view(), name='booking'),
+    path('user_action/booking/filtered/', BookingFilteredAPIView.as_view(), name='booking_filtered'),
+    path('user_action/vote/', VoteAPIView.as_view(), name='vote'),
 ]

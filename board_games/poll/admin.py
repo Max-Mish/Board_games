@@ -7,7 +7,7 @@ from .models import Choice, Question
 
 @admin.register(Choice)
 class ChoiceAdmin(admin.ModelAdmin):
-    list_display = ['question', 'choice_text', 'votes']
+    list_display = ['question', 'choice_text', 'n_votes']
 
 
 @admin.register(Question)

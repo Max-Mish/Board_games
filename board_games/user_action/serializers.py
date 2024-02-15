@@ -1,22 +1,22 @@
 from rest_framework import serializers
 
-from game.serializers import GameSerializer
-from user.serializers import UserResponseShortSerializer
+from game.serializers import GameRequestSerializer, GameResponseSerializer
+from authentication.serializers import ProfileInfoSerializer
 from .models import Booking, Vote
 
 
 class BookingRequestSerializer(serializers.ModelSerializer):
-    game_id = serializers.IntegerField(required=True)
-    user_id = serializers.IntegerField(required=True)
+    game_id = serializers.IntegerField()
+    user_id = serializers.IntegerField()
 
     class Meta:
         model = Booking
-        fields = ['game_id', 'user_id', 'opening_date', 'return_period']
+        fields = ['game_id', 'user_id', 'opening_date', 'return_date']
 
 
 class BookingResponseSerializer(serializers.ModelSerializer):
-    game = GameSerializer()
-    user = UserResponseShortSerializer()
+    game = GameResponseSerializer()
+    user = ProfileInfoSerializer()
 
     class Meta:
         model = Booking
@@ -24,12 +24,12 @@ class BookingResponseSerializer(serializers.ModelSerializer):
 
 
 class VoteRequestSerializer(serializers.Serializer):
-    choice_ids = serializers.ListField(child=serializers.IntegerField(required=True))
-    user_id = serializers.IntegerField(required=True)
+    choice_ids = serializers.ListField(child=serializers.IntegerField())
+    user_id = serializers.IntegerField()
 
 
 class VoteResponseSerializer(serializers.ModelSerializer):
-    user = UserResponseShortSerializer()
+    user = ProfileInfoSerializer()
 
     class Meta:
         model = Vote

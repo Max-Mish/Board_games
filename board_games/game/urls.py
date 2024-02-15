@@ -1,11 +1,9 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 
-from .views import GameListViewSet
+from .views import GameAPIView, CategoryAPIView
 
-router = DefaultRouter()
-router.register(r'game', GameListViewSet)
-
+app_name = 'game'
 urlpatterns = [
-    path('', include(router.urls)),
+    path('game/', GameAPIView.as_view(), name='game'),
+    path('category/', CategoryAPIView.as_view(), name='category'),
 ]

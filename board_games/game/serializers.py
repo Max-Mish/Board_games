@@ -9,15 +9,32 @@ class DescriptionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategoryRequestSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()
+
+    class Meta:
+        model = Category
+        fields = ['id']
+
+
+class CategoryResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
 
 
-class GameSerializer(serializers.ModelSerializer):
+class GameRequestSerializer(serializers.ModelSerializer):
     description = DescriptionSerializer()
-    category = CategorySerializer(many=True)
+    category_ids = CategoryRequestSerializer(many=True)
+
+    class Meta:
+        model = Game
+        fields = ['name', 'publisher', 'cost', 'description', 'category_ids']
+
+
+class GameResponseSerializer(serializers.ModelSerializer):
+    description = DescriptionSerializer()
+    category = CategoryResponseSerializer(many=True)
 
     class Meta:
         model = Game

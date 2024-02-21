@@ -15,12 +15,12 @@ RUN rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /code
 
-COPY requirements.txt ./
+COPY ../requirements.txt ./
 
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./board_games/ /code/
+COPY backend/ /code/
 
 WORKDIR /code/
 

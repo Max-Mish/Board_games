@@ -33,5 +33,5 @@ class PurchaseItemView(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        response = item_purchase_request.request_items_purchase()
+        response = item_purchase_request.request_items_purchase(request)
         return Response({'response': response}, status=status.HTTP_200_OK)

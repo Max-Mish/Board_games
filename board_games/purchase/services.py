@@ -80,7 +80,7 @@ class ItemPurchaseRequest:
         )
         self._validate_income_data()
 
-    def request_items_purchase(self):
+    def request_items_purchase(self, request):
         invoice_creator = InvoiceCreator(self.purchase_items_data, self.user_account)
         invoice_instance = invoice_creator.invoice_instance
 
@@ -113,7 +113,8 @@ class ItemPurchaseRequest:
                 },
                 'confirmation': {
                     'type': 'redirect',
-                    'return_url': self.purchase_items_data['return_url'],
+                    'return_url': request.build_absolute_uri(
+                        f'/purchases/callback?purchase={balance_change.pk}_{str(invoice_instance.pk)}'),
                 },
                 'metadata': {
                     'table_id': balance_change.pk,

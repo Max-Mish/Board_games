@@ -1,11 +1,13 @@
 import rollbar
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import serializers
 from rest_framework import status, generics, viewsets
 from rest_framework.generics import CreateAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
-from .models import Account
+from purchase.models import Invoice
+from .models import Account, BalanceChange
 from .serializers import CalculateCommissionSerializer, BalanceIncreaseSerializer, AccountSerializer, UUIDSerializer, \
     BalanceSerializer, YookassaPaymentAcceptanceSerializer
 from .services import PaymentCalculation, request_balance_deposit_url, check_yookassa_response, \
@@ -43,7 +45,7 @@ class BalanceIncreaseAPIView(CreateAPIView):
         data = serializer.validated_data
         data['user_uuid'] = request.user.pk
 
-        confirmation_url = request_balance_deposit_url(data)
+        confirmation_url = request_balance_deposit_url(request, data)
         return Response(
             {'confirmation_url': confirmation_url},
             status=status.HTTP_201_CREATED,
@@ -119,3 +121,26 @@ class YookassaPaymentAcceptanceView(viewsets.GenericViewSet):
             'warning',
         )
         return Response(404)
+
+
+class CallbackView(generics.GenericAPIView):
+    class CallbackSerializer(serializers.Serializer):
+        purchase = serializers.CharField(required=True)
+
+    @swagger_auto_schema(responses={200: serializers.Serializer()}, query_serializer=CallbackSerializer())
+    def get(self, request):
+        serializer = self.CallbackSerializer(request.query_params)
+        purchase = serializer.data.get('purchase')
+
+        balance_change_id, invoice_id = purchase.split('_')
+
+        balance_change = BalanceChange.objects.get(id=balance_change_id)
+        balance_change.is_accepted = True
+        balance_change.save()
+
+        if invoice_id:
+            invoice = Invoice.objects.get(invoice_id=invoice_id)
+            invoice.is_paid = True
+            invoice.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

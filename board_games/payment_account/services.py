@@ -84,7 +84,7 @@ class PaymentCalculation:
         return payment_commission.commission
 
 
-def request_balance_deposit_url(balance_increase_data):
+def request_balance_deposit_url(request, balance_increase_data):
     user_account, _ = Account.objects.get_or_create(user_uuid=balance_increase_data['user_uuid'])
     amount = balance_increase_data['amount']
     value = amount['value']
@@ -113,7 +113,8 @@ def request_balance_deposit_url(balance_increase_data):
         },
         'confirmation': {
             'type': 'redirect',
-            'return_url': balance_increase_data['return_url'],
+            'return_url': request.build_absolute_uri(
+                f'/payment_accounts/callback?purchase={balance_change.pk}_'),
         },
         'metadata': {
             'table_id': balance_change.pk,

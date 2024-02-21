@@ -17,7 +17,6 @@ class AccountSerializer(serializers.ModelSerializer):
 class CalculateCommissionSerializer(serializers.Serializer):
     payment_types = ('bank_card', 'yoo_money', 'sberbank', 'qiwi', 'from_balance')
     payment_services = ('yookassa', 'from_balance')
-
     payment_type = serializers.ChoiceField(choices=payment_types)
     payment_service = serializers.ChoiceField(choices=payment_services)
     payment_amount = serializers.DecimalField(min_value=0,
@@ -43,7 +42,6 @@ class BalanceIncreaseSerializer(serializers.Serializer):
 
     payment_type = serializers.ChoiceField(choices=payment_types)
     payment_service = serializers.ChoiceField(choices=payment_services)
-    user_uuid = serializers.UUIDField()
     return_url = serializers.URLField()
     amount = YookassaMoneySerializer()
 

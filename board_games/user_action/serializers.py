@@ -7,11 +7,10 @@ from .models import Booking, Vote
 
 class BookingRequestSerializer(serializers.ModelSerializer):
     game_id = serializers.IntegerField()
-    user_id = serializers.IntegerField()
 
     class Meta:
         model = Booking
-        fields = ['game_id', 'user_id', 'opening_date', 'return_date']
+        fields = ['game_id', 'return_date']
 
 
 class BookingResponseSerializer(serializers.ModelSerializer):

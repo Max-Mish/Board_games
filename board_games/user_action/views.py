@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import permission_required
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, generics
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Booking, Vote
@@ -12,6 +13,7 @@ from .serializers import BookingRequestSerializer, BookingResponseSerializer, Vo
 
 
 class BookingAPIView(generics.GenericAPIView):
+    permission_classes = (IsAuthenticated,)
     view_permissions = (
         'user_action.view_booking', 'game.view_game', 'game.view_description', 'game.view_category',
         'authentication.view_profile_info'
@@ -30,7 +32,8 @@ class BookingAPIView(generics.GenericAPIView):
         serializer = BookingRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        booking = Booking(user_id=data['user_id'], game_id=data['game_id'], return_date=data['return_date'])
+        user_id = request.user.pk
+        booking = Booking(user_id=user_id, game_id=data['game_id'], return_date=data['return_date'])
         booking.save()
         return Response(
             data=BookingResponseSerializer(booking).data, status=status.HTTP_201_CREATED
@@ -38,6 +41,7 @@ class BookingAPIView(generics.GenericAPIView):
 
 
 class BookingFilteredAPIView(generics.GenericAPIView):
+    permission_classes = (IsAuthenticated,)
     view_permissions = (
         'user_action.view_booking', 'user_action.view_filtered_booking', 'game.view_game', 'game.view_description',
         'game.view_category', 'authentication.view_profile_info'
@@ -55,6 +59,7 @@ class BookingFilteredAPIView(generics.GenericAPIView):
 
 
 class VoteAPIView(generics.GenericAPIView):
+    permission_classes = (IsAuthenticated,)
     view_permissions = ('user_action.view_vote', 'authentication.view_profile_info')
     add_permissions = ('user_action.add_vote', *view_permissions)
 

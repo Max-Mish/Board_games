@@ -15,7 +15,7 @@ class Booking(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     opening_date = models.DateField(auto_now_add=True)
     closing_date = models.DateField(blank=True, null=True)
-    return_date = models.DateField(default=date.today() + timedelta(weeks=1))
+    return_date = models.DateField()
 
     def __str__(self):
         return f'{self.user} | {self.game}'

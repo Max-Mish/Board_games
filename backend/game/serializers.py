@@ -29,7 +29,7 @@ class GameRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ['name', 'publisher', 'cost', 'description', 'category_ids']
+        fields = ['name', 'publisher', 'cost', 'cover_photo', 'description', 'category_ids']
 
 
 class GameResponseSerializer(serializers.ModelSerializer):
@@ -39,3 +39,7 @@ class GameResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
         fields = '__all__'
+
+
+class GameQuerySerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=True)

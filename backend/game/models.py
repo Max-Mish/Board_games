@@ -11,7 +11,7 @@ class Description(models.Model):
     }
 
     description_text = models.TextField(blank=True, null=True)
-    n_players = models.IntegerField('number of players')
+    n_players = models.TextField('number of players')
     duration = models.IntegerField()
     difficulty = models.CharField(max_length=1, choices=DIFFICULTY_CHOICES)
 
@@ -35,6 +35,8 @@ class Game(models.Model):
     category = models.ManyToManyField(Category)
     publisher = models.CharField(max_length=50)
     cost = models.IntegerField()
+    cover_photo = models.URLField(blank=True, null=True)
+    is_available = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name

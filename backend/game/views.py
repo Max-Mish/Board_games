@@ -1,24 +1,48 @@
 from django.contrib.auth.decorators import permission_required
+from django.db.models import Count
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, generics
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Game, Category, Description
-from .serializers import GameRequestSerializer, GameResponseSerializer, CategoryResponseSerializer
+from .serializers import GameRequestSerializer, GameResponseSerializer, CategoryResponseSerializer, GameQuerySerializer
 
 
-class GameAPIView(generics.GenericAPIView):
-    permission_classes = (IsAuthenticated,)
-    view_permissions = ('game.view_game', 'game.view_description', 'game.view_category')
-    add_permissions = ('game.add_game', 'game.add_description', *view_permissions)
+class RelatedGamesAPIView(generics.ListAPIView):
+    @swagger_auto_schema(responses={200: GameResponseSerializer(many=True)}, query_serializer=GameQuerySerializer())
+    def get(self, request):
+        serializer = GameQuerySerializer(request.query_params)
+        game_id = serializer.data.get('id')
+        game = Game.objects.get(id=game_id)
 
-    @method_decorator(permission_required(perm=view_permissions, raise_exception=True))
+        category_ids = [category.id for category in game.category.all()]
+        games = Game.objects.filter(category__id__in=category_ids).distinct()
+        games = games.exclude(id=game_id)
+
+        return Response(data=GameResponseSerializer(games, many=True).data,
+                        status=status.HTTP_200_OK)
+class GamesAPIView(generics.ListAPIView):
     @swagger_auto_schema(responses={200: GameResponseSerializer(many=True)})
     def get(self, request):
         queryset = Game.objects.all().order_by('-id')
         return Response(data=GameResponseSerializer(queryset, many=True).data,
+                        status=status.HTTP_200_OK)
+
+
+class GameAPIView(generics.GenericAPIView):
+    # permission_classes = (IsAuthenticated,)
+    view_permissions = ('game.view_game', 'game.view_description', 'game.view_category')
+    add_permissions = ('game.add_game', 'game.add_description', *view_permissions)
+
+    # @method_decorator(permission_required(perm=view_permissions, raise_exception=True))
+    @swagger_auto_schema(responses={200: GameResponseSerializer(many=True)}, query_serializer=GameQuerySerializer())
+    def get(self, request):
+        serializer = GameQuerySerializer(request.query_params)
+        game_id = serializer.data.get('id')
+
+        game = Game.objects.get(id=game_id)
+        return Response(data=GameResponseSerializer(game).data,
                         status=status.HTTP_200_OK)
 
     @method_decorator(permission_required(perm=add_permissions, raise_exception=True))
@@ -53,11 +77,11 @@ class GameAPIView(generics.GenericAPIView):
 
 
 class CategoryAPIView(generics.GenericAPIView):
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
     view_permissions = ('game.view_category',)
     add_permissions = ('game.add_game', 'game.add_description', *view_permissions)
 
-    @method_decorator(permission_required(perm=view_permissions, raise_exception=True))
+    # @method_decorator(permission_required(perm=view_permissions, raise_exception=True))
     @swagger_auto_schema(responses={200: CategoryResponseSerializer(many=True)})
     def get(self, request):
         queryset = Category.objects.all().order_by('-id')

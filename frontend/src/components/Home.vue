@@ -1,15 +1,15 @@
 <template>
   <div>
-    <Navigation></Navigation>
+    <navigation></navigation>
   </div>
   <div>
-    <FooterBig></FooterBig>
+    <footerBig></footerBig>
   </div>
 </template>
 
 <script>
-import Navigation from "./Navigation.vue";
-import Alert from './Alert.vue';
+import Alert from '@/components/Alert.vue';
+import Navigation from "@/components/Navigation.vue";
 import FooterBig from "@/components/FooterBig.vue";
 
 export default {
@@ -20,8 +20,8 @@ export default {
   },
 
   components: {
-    FooterBig: FooterBig,
-    Navigation: Navigation,
+    footerBig: FooterBig,
+    navigation: Navigation,
     alert: Alert,
   },
   methods: {}

@@ -1,6 +1,6 @@
 <template>
   <div style="margin-bottom: 8%; background-color: #eee;">
-    <Navigation></Navigation>
+    <navigation></navigation>
   </div>
   <section class="vh-100">
     <div class="container h-100">
@@ -78,15 +78,16 @@
     </div>
   </section>
   <div style="margin-top: 15%;">
-    <FooterSmall></FooterSmall>
+    <footerSmall></footerSmall>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
-import Alert from './Alert.vue';
+import Alert from '@/components/Alert.vue';
 import Navigation from "@/components/Navigation.vue";
 import FooterSmall from "@/components/FooterSmall.vue";
+import {baseApiUrl} from "@/services/baseApi.js";
 
 export default {
   name: 'Registration',
@@ -108,8 +109,8 @@ export default {
   },
 
   components: {
-    FooterSmall: FooterSmall,
-    Navigation: Navigation,
+    footerSmall: FooterSmall,
+    navigation: Navigation,
     alert: Alert,
   },
   methods: {
@@ -125,7 +126,7 @@ export default {
       }
     },
     checkRegistration(payload) {
-      const path = 'http://localhost:8000/api/register/';
+      const path = `${baseApiUrl}/api/register/`;
       const cb = document.querySelector('#form2Example3c');
       if (this.inputForm.password === this.inputForm.repeatPassword) {
         this.showPasswordMismatchMessage = false;
@@ -144,7 +145,7 @@ export default {
                     email: this.inputForm.email,
                     password: this.inputForm.password,
                   };
-                  const path = 'http://localhost:8000/api/token/';
+                  const path = `${baseApiUrl}/api/token/`;
                   axios.post(path, payload)
                       .then((res) => {
                         this.$cookies.set('token', res.data.access)

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Navigation></Navigation>
+    <navigation></navigation>
   </div>
   <section class="vh-100">
     <div class="container h-100">
@@ -29,9 +29,11 @@
 
             <div class="text-center text-lg-start mt-4 pt-2">
               <button type="button" class="btn btn-primary btn-lg"
-                      style="padding-left: 2.5rem; padding-right: 2.5rem;" @click="login">Login</button>
+                      style="padding-left: 2.5rem; padding-right: 2.5rem;" @click="onLogin">Login
+              </button>
               <p class="small fw-bold mt-2 pt-1 mb-0">Don't have an account? <a href=""
-                                                                                class="link-primary" @click="onRegister">Register</a></p>
+                                                                                class="link-primary"
+                                                                                @click="onRegister">Register</a></p>
             </div>
 
           </form>
@@ -40,20 +42,23 @@
     </div>
   </section>
   <div>
-    <FooterSmall></FooterSmall>
+    <footerSmall></footerSmall>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
-import Alert from './Alert.vue';
+import Alert from '@/components/Alert.vue';
 import Navigation from "@/components/Navigation.vue";
 import FooterSmall from "@/components/FooterSmall.vue";
+import {baseApiUrl} from "@/services/baseApi.js";
+import {useProfileStore} from "@/stores/profile.js";
 
 export default {
   name: 'Login',
   data() {
     return {
+      profileStore: '',
       showMessage: false,
       message: '',
       status: '',
@@ -65,16 +70,13 @@ export default {
   },
 
   components: {
-    FooterSmall: FooterSmall,
-    Navigation: Navigation,
+    footerSmall: FooterSmall,
+    navigation: Navigation,
     alert: Alert,
   },
 
   methods: {
-    onRegister() {
-      this.$router.push({name: 'Registration'});
-    },
-    login() {
+    onLogin() {
       if (this.inputForm.email && this.inputForm.password) {
         const payload = {
           email: this.inputForm.email,
@@ -84,7 +86,7 @@ export default {
       }
     },
     checkLogin(payload) {
-      const path = 'http://localhost:8000/api/token/';
+      const path = `${baseApiUrl}/api/token/`;
       axios.post(path, payload)
           .then((res) => {
             if (res.data.status === false) {
@@ -95,6 +97,7 @@ export default {
             } else {
               this.status = true;
               this.$cookies.set('token', res.data.access)
+              this.getProfile()
               this.$router.push({name: 'Home'})
             }
           })
@@ -105,6 +108,22 @@ export default {
             this.showMessage = true;
           });
     },
-  }
+    getProfile() {
+      const path = `${baseApiUrl}/api/profile/`;
+      axios.get(path, {
+        headers: {"Authorization": `Bearer ${this.$cookies.get('token')}`}
+      }).then((res) => {
+        this.profileStore.addInfo(res.data)
+      }).catch((error) => {
+        console.error(error);
+      });
+    },
+    onRegister() {
+      this.$router.push({name: 'Registration'});
+    },
+  },
+  created() {
+    this.profileStore = useProfileStore(this.$pinia);
+  },
 }
 </script>

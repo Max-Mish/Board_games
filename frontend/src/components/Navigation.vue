@@ -1,8 +1,7 @@
 <template>
-  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg fixed-top bg-light navbar-light">
     <div class="container">
-      <a class="navbar-brand" href="#"
+      <a class="navbar-brand" href=""
       ><img
           id="Board-Games-logo"
           src="https://images.twinkl.co.uk/tw1n/image/private/t_630/u/builder/board-games-logo-colour-cmyk-1687979724.png"
@@ -40,7 +39,7 @@
               <button class="btn btn-outline-dark" type="submit" @click="onCart">
                 <i class="bi-cart-fill me-1 fa-solid fa-cart-shopping pe-1"></i>
                 Cart
-                <span class="badge bg-dark text-white ms-1 rounded-pill">0</span>
+                <span class="badge bg-dark text-white ms-1 rounded-pill">{{ cartStore.totalItems }}</span>
               </button>
             </form>
             <a
@@ -52,7 +51,7 @@
                 aria-expanded="false"
             >
               <img
-                  :src="cover_photo ? cover_photo : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHUyeHkZzAKI4scD3H59lC92acZj35vp_cFC-jq1Vp4Q&s'"
+                  :src="profileStore.cover_photo ? profileStore.cover_photo : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHUyeHkZzAKI4scD3H59lC92acZj35vp_cFC-jq1Vp4Q&s'"
                   class="rounded-circle"
                   height="30"
                   alt=""
@@ -60,7 +59,7 @@
               />
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-              <li ><a class="dropdown-item" href="#" @click="onProfile">My profile</a></li>
+              <li><a class="dropdown-item" href="#" @click="onProfile">My profile</a></li>
               <li><a class="dropdown-item" href="#" @click="onSettings">Settings</a></li>
               <li><a class="dropdown-item" href="#" @click="onLogout">Logout</a></li>
             </ul>
@@ -73,8 +72,11 @@
 </template>
 
 <script>
-import axios from 'axios';
-import Alert from './Alert.vue';
+import Alert from '@/components/Alert.vue';
+import {useCartStore} from "@/stores/cart.js"
+import {useGamesStore} from "@/stores/games.js";
+import {useProfileStore} from "@/stores/profile.js";
+import {useBookingsStore} from "@/stores/bookings.js";
 
 export default {
 
@@ -83,37 +85,22 @@ export default {
     return {
       showMessage: false,
       logged: false,
-      token: '',
-      username: '',
-      email: '',
-      cover_photo: '',
       message: '',
       status: '',
+      cartStore: '',
+      gamesStore: '',
+      bookingsStore: '',
+      profileStore: '',
     }
   },
 
   components: {
     alert: Alert,
   },
-  created() {
-    const path = 'http://localhost:8000/api/profile/';
-    this.token = this.$cookies.get('token');
-    axios.get(path, {
-      headers: {"Authorization": `Bearer ${this.token}`}
-    }).then((res) => {
-      this.logged = true;
-      this.username = res.data.username
-      this.email = res.data.email
-      this.cover_photo = res.data.cover_photo
-    }).catch((error) => {
-      this.logged = false;
-    });
-  },
+
   computed: {
     showSignIn() {
-      this.token = this.$cookies.get('token');
-      this.logged = !!this.token;
-      console.log(this.token);
+      this.logged = this.$cookies.get('token') && this.profileStore.logged;
       return !this.logged;
     }
   },
@@ -123,6 +110,9 @@ export default {
     },
     onLogout() {
       this.$cookies.set('token', '');
+      this.profileStore.resetInfo();
+      this.bookingsStore.resetBookings();
+      this.cartStore.resetCart();
       this.$router.push({name: 'Login'});
     },
     onHome() {
@@ -143,6 +133,12 @@ export default {
     onCart() {
       this.$router.push({name: 'Cart'})
     },
+  },
+  created() {
+    this.profileStore = useProfileStore(this.$pinia);
+    this.gamesStore = useGamesStore(this.$pinia);
+    this.cartStore = useCartStore(this.$pinia);
+    this.bookingsStore = useBookingsStore(this.$pinia);
   },
 }
 </script>

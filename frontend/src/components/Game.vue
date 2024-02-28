@@ -1,7 +1,7 @@
 <template>
-  <router-view :key="$route.fullPath" />
+  <router-view :key="$route.fullPath"/>
   <div>
-    <Navigation></Navigation>
+    <navigation></navigation>
   </div>
   <!-- Product section-->
   <section class="py-5">
@@ -56,7 +56,7 @@
               <span class="display-7 fw-bolder" style="color: green">Game Available</span>
             </div>
             <div class="d-flex align-items-center">
-              <button class="btn btn-outline-dark flex-shrink-0" type="button">
+              <button class="btn btn-outline-dark flex-shrink-0" type="button" @click="onCart(game)">
                 <i class="bi-cart-fill me-1"></i>
                 Add to cart
               </button>
@@ -75,7 +75,7 @@
       <h2 class="fw-bolder mb-4">Related products</h2>
       <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
         <div class="col mb-5" v-for="(game, index) in relatedGames" :key="index">
-          <div class="card h-100" >
+          <div class="card h-100">
             <!-- Product image-->
             <img class="card-img-top" :src="game.cover_photo" alt="Related Game Cover"
                  style="width: 230px; height: 230px; background-color: white; display: flex; justify-content: center; align-items: center; max-width: 100%; max-height: 100%; object-fit: contain;"/>
@@ -90,7 +90,9 @@
             </div>
             <!-- Product actions-->
             <div class="card-footer p-4 pt-0 border-top-0 bg-transparent text-center">
-              <button class="btn btn-primary btn-sm align-items-center justify-content-center" type="button" @click="onGame(game.id)">Details</button>
+              <button class="btn btn-primary btn-sm align-items-center justify-content-center" type="button">
+                <a :href="`http://localhost:5173/game?id=${game.id}`" style="color: white;">Details</a>
+              </button>
             </div>
           </div>
         </div>
@@ -99,21 +101,25 @@
   </section>
   <!-- Footer-->
   <div>
-    <FooterSmall></FooterSmall>
+    <footerSmall></footerSmall>
   </div>
 </template>
 
 <script>
-import Navigation from "./Navigation.vue";
-import Alert from './Alert.vue';
 import axios from "axios";
+import Alert from '@/components/Alert.vue';
+import Navigation from "@/components/Navigation.vue";
 import FooterSmall from "@/components/FooterSmall.vue";
+import { useCartStore } from "@/stores/cart.js";
+import {baseApiUrl} from "@/services/baseApi.js";
+
 
 export default {
 
   name: 'Game',
   data() {
     return {
+      cartStore : '',
       gameId: '',
       game: '',
       relatedGames: [],
@@ -122,18 +128,19 @@ export default {
   },
 
   components: {
-    FooterSmall: FooterSmall,
-    Navigation: Navigation,
+    footerSmall: FooterSmall,
+    navigation: Navigation,
     alert: Alert,
   },
   created() {
+    this.cartStore = useCartStore(this.$pinia);
     this.gameId = this.$route.query.id;
     this.getGame();
     this.getRelatedGames();
   },
   methods: {
     getGame() {
-      const path = `http://localhost:8000/games/game?id=${this.gameId}`;
+      const path = `${baseApiUrl}/games/game?id=${this.gameId}`;
       axios.get(path)
           .then((res) => {
             this.game = res.data;
@@ -152,11 +159,8 @@ export default {
             console.error(error);
           });
     },
-    onGame(gameId) {
-      this.$router.push({
-        name: 'Game',
-        query: {id: gameId},
-      });
+    onCart(game) {
+      this.cartStore.addItem(game)
     },
   },
 }

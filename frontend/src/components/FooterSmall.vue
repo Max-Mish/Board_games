@@ -10,7 +10,7 @@
           <!-- Facebook -->
           <a
               class="btn btn-link btn-floating btn-lg text-dark m-1"
-              href="#!"
+              href=""
               role="button"
               data-mdb-ripple-color="dark"
           ><i class="fab fa-facebook-f"></i
@@ -77,5 +77,22 @@
 </template>
 
 <script>
+import Alert from '@/components/Alert.vue';
 
+export default {
+
+  name: 'FooterSmall',
+  data() {
+    return {
+    }
+  },
+
+  components: {
+    alert: Alert,
+  },
+
+  methods: {
+
+  },
+}
 </script>

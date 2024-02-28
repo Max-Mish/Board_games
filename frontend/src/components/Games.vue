@@ -1,12 +1,12 @@
 <template>
   <div>
-    <Navigation></Navigation>
+    <navigation></navigation>
   </div>
   <section style="background-color: #eee;">
     <div class="container py-5">
       <p class="text-center h1 fw-bold mb-5 mx-1 mx-md-4 mt-4">Games</p>
       <div class="row justify-content-center mb-3">
-        <div class="col-md-12 col-xl-10" v-for="(game, index) in games" :key="index">
+        <div class="col-md-12 col-xl-10" v-for="(game, index) in gamesStore.games.items" :key="index">
           <div class="card shadow-0 border rounded-3">
             <div class="card-body">
               <div class="row">
@@ -60,7 +60,8 @@
                     {{ game.is_available ? 'Game Available' : 'Game Unavailable' }}</h6>
                   <div class="d-flex flex-column mt-4">
                     <button class="btn btn-primary btn-sm" type="button" @click="onGame(game.id)">Details</button>
-                    <button class="btn btn-outline-primary btn-sm mt-2" type="button" @click="onCart(game.id)">
+                    <button class="btn btn-outline-primary btn-sm mt-2" type="button" v-if="game.is_available"
+                            @click="onCart(game)">
                       Add to cart
                     </button>
                   </div>
@@ -73,43 +74,45 @@
     </div>
   </section>
   <div>
-    <FooterSmall></FooterSmall>
+    <footerSmall></footerSmall>
   </div>
 </template>
 
 <script>
-import Navigation from "./Navigation.vue";
-import Alert from './Alert.vue';
 import axios from "axios";
+import Navigation from "@/components/Navigation.vue";
+import Alert from '@/components/Alert.vue';
 import FooterSmall from "@/components/FooterSmall.vue";
+import {useCartStore} from "@/stores/cart.js";
+import {useGamesStore} from "@/stores/games.js";
+import {baseApiUrl} from '@/services/baseApi';
+
 
 export default {
 
   name: 'Games',
   data() {
     return {
-      games: [],
+      cartStore: '',
+      gamesStore: '',
       difficulties: {1: 'Very Easy', 2: 'Easy', 3: 'Normal', 4: 'Hard', 5: 'Very Hard'}
     }
   },
 
   components: {
-    FooterSmall: FooterSmall,
-    Navigation: Navigation,
+    footerSmall: FooterSmall,
+    navigation: Navigation,
     alert: Alert,
-  },
-  created() {
-    this.getGames();
   },
   methods: {
     getGames() {
-      const path = 'http://localhost:8000/games/';
+      const path = `${baseApiUrl}/games/`;
       axios.get(path)
           .then((res) => {
-            this.games = res.data;
+            this.gamesStore.resetGames()
+            this.gamesStore.gamesReceived(res.data)
           })
           .catch((error) => {
-            // eslint-disable-next-line
             console.error(error);
           });
     },
@@ -119,12 +122,14 @@ export default {
         query: {id: gameId}
       });
     },
-    onCart(gameId) {
-      this.$router.push({
-        name: 'Cart',
-        query: {id: gameId}
-      });
+    onCart(game) {
+      this.cartStore.addItem(game)
     },
-  }
+  },
+  created() {
+    this.gamesStore = useGamesStore(this.$pinia);
+    this.cartStore = useCartStore(this.$pinia);
+    this.getGames();
+  },
 }
 </script>

@@ -84,5 +84,22 @@
 </template>
 
 <script>
+import Alert from '@/components/Alert.vue';
 
+export default {
+
+  name: 'FooterBig',
+  data() {
+    return {
+    }
+  },
+
+  components: {
+    alert: Alert,
+  },
+
+  methods: {
+
+  },
+}
 </script>

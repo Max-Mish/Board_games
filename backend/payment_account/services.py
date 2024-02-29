@@ -54,7 +54,6 @@ class PaymentCalculation:
         self.payment_type = payment_type
         self.payment_service = payment_service
         self.payment_amount = payment_amount
-        self.key_cache = f'unique_key_{payment_service}_{payment_type}'
 
     def calculate_payment_with_commission(self) -> Decimal:
         commission = self._get_commission_percent()
@@ -71,8 +70,6 @@ class PaymentCalculation:
         )
 
     def _get_commission_percent(self) -> Decimal:
-        if result := cache.get(self.key_cache):
-            return result
 
         payment_commission = get_object_or_404(
             PaymentCommission,
@@ -80,7 +77,6 @@ class PaymentCalculation:
             payment_service=self.payment_service,
         )
 
-        cache.set(self.key_cache, payment_commission.commission)
         return payment_commission.commission
 
 

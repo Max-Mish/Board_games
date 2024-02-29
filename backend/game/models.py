@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 
@@ -40,3 +42,26 @@ class Game(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class BookedDate(models.Model):
+    date = models.DateField()
+
+
+class GameItem(models.Model):
+    id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    booked_dates = models.ManyToManyField(BookedDate)
+
+    def add_booked_date(self, date):
+        booked_date, created = BookedDate.objects.get_or_create(date=date)
+        self.booked_dates.add(booked_date)
+
+    def remove_booked_date(self, date):
+        try:
+            booked_date = BookedDate.objects.get(date=date)
+            self.booked_dates.remove(booked_date)
+        except BookedDate.DoesNotExist:
+            pass
+

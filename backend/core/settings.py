@@ -145,9 +145,9 @@ DATABASES = {
         'PASSWORD': env.str('SQL_PASSWORD'),
         'HOST': env.str('SQL_HOST'),
         'PORT': env.str('SQL_PORT'),
-    #     'default': {
-    #         'ENGINE': 'django.db.backends.sqlite3',
-    #         'NAME': BASE_DIR / 'db.sqlite3',
+        # 'default': {
+        #     'ENGINE': 'django.db.backends.sqlite3',
+        #     'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

@@ -13,7 +13,6 @@ export const useBookingsStore = defineStore('bookings', () => {
 
         const bookingsReceived = (items) => {
             if (items.length === 0) return bookings.value.hasMore = false;
-            console.log(items)
             bookings.value.items = [...bookings.value.items, ...items];
             bookings.value.currentPageNum += 1;
 

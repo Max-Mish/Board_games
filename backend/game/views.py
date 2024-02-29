@@ -1,12 +1,13 @@
 from django.contrib.auth.decorators import permission_required
-from django.db.models import Count
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, generics
 from rest_framework.response import Response
 
-from .models import Game, Category, Description
-from .serializers import GameRequestSerializer, GameResponseSerializer, CategoryResponseSerializer, GameQuerySerializer
+from .models import Game, Category, Description, GameItem
+from .serializers import GameRequestSerializer, GameResponseSerializer, CategoryResponseSerializer, GameQuerySerializer, \
+    DatesCheckRequestSerializer, DatesCheckResponseSerializer, GameItemCreateSerializer, GameItemSerializer
+from .services import get_all_dates, get_available_game_items, pack_response_serializer
 
 
 class RelatedGamesAPIView(generics.ListAPIView):
@@ -22,6 +23,8 @@ class RelatedGamesAPIView(generics.ListAPIView):
 
         return Response(data=GameResponseSerializer(games, many=True).data,
                         status=status.HTTP_200_OK)
+
+
 class GamesAPIView(generics.ListAPIView):
     @swagger_auto_schema(responses={200: GameResponseSerializer(many=True)})
     def get(self, request):
@@ -96,3 +99,36 @@ class CategoryAPIView(generics.GenericAPIView):
         return Response(
             data=serializer.data, status=status.HTTP_201_CREATED
         )
+
+
+class GameItemCreateAPIView(generics.GenericAPIView):
+    @swagger_auto_schema(request_body=GameItemCreateSerializer(), responses={201: GameItemSerializer(many=True)})
+    def post(self, request):
+        serializer = GameItemCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        game_item_data = serializer.validated_data
+        game_id = game_item_data.get('game_id')
+        n_items = game_item_data.get('n_items')
+
+        items = [GameItem.objects.create(game_id=game_id) for _ in range(n_items)]
+
+        return Response(
+            data=GameItemSerializer(items, many=True).data, status=status.HTTP_201_CREATED
+        )
+
+
+class DatesCheckAPIView(generics.GenericAPIView):
+    @swagger_auto_schema(request_body=DatesCheckRequestSerializer(), responses={201: DatesCheckResponseSerializer()})
+    def post(self, request):
+        serializer = DatesCheckRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        game_item_data = serializer.validated_data
+        game_id = game_item_data.get('game_id')
+        amount = game_item_data.get('amount')
+
+        booked_dates = get_all_dates(game_item_data.get('booked_dates'))
+        available_items = get_available_game_items(game_id, booked_dates)
+        response_serializer_data = pack_response_serializer(available_items, amount)
+        return Response(data=response_serializer_data, status=status.HTTP_200_OK)

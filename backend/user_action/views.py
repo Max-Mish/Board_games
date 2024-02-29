@@ -27,17 +27,25 @@ class BookingAPIView(generics.GenericAPIView):
         return Response(data=BookingResponseSerializer(queryset, many=True).data, status=status.HTTP_200_OK)
 
     @method_decorator(permission_required(perm=add_permissions, raise_exception=True))
-    @swagger_auto_schema(request_body=BookingRequestSerializer(), responses={201: BookingResponseSerializer()})
+    @swagger_auto_schema(request_body=BookingRequestSerializer(many=True), responses={201: BookingResponseSerializer()})
     def post(self, request):
-        serializer = BookingRequestSerializer(data=request.data)
+        serializer = BookingRequestSerializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
         user_id = request.user.pk
-        booking = Booking(user_id=user_id, game_id=data['game_id'], return_date=data['return_date'])
-        booking.save()
-        return Response(
-            data=BookingResponseSerializer(booking).data, status=status.HTTP_201_CREATED
-        )
+        bookings = []
+        for data in serializer.validated_data:
+            booking = Booking(
+                user_id=user_id,
+                game_id=data['game_id'],
+                game_item_id=data['game_item_id'],
+                opening_date=data['opening_date'],
+                return_date=data['return_date']
+            )
+            booking.save()
+            bookings.append(booking)
+
+        response_data = BookingResponseSerializer(bookings, many=True).data
+        return Response(data=response_data, status=status.HTTP_201_CREATED)
 
 
 class BookingFilteredAPIView(generics.GenericAPIView):

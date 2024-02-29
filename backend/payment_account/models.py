@@ -2,7 +2,6 @@ from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.shortcuts import get_object_or_404
 from djmoney.models import fields
-from yookassa.domain.common import PaymentMethodType
 
 
 class Account(models.Model):
@@ -72,49 +71,10 @@ class BalanceChange(models.Model):
         ordering = ['-date_time_creation']
 
 
-class PayoutData(models.Model):
-    class PayoutType(models.TextChoices):
-        BANK_CARD = (PaymentMethodType.BANK_CARD, 'BANK_CARD')
-        YOO_MONEY = (PaymentMethodType.YOO_MONEY, 'YOO_MONEY')
-
-    user_uuid = models.OneToOneField(
-        Account,
-        to_field='user_uuid',
-        primary_key=True,
-        on_delete=models.CASCADE,
-        related_name='payout_data',
-        editable=False,
-    )
-    account_number = models.CharField(max_length=30)
-    is_auto_payout = models.BooleanField(default=False)
-    payout_type = models.CharField(max_length=23, choices=PayoutType.choices)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['account_number', 'payout_type'],
-                name='unique payout data',
-            ),
-        ]
-
-    def __str__(self):
-        return (
-            f'Account id: {self.user_uuid.pk} '
-            f'Account number: {self.account_number} '
-            f'Payout_type: {self.payout_type}'
-        )
-
-
 class PaymentCommission(models.Model):
-    MAX_COMMISSION = 100
-
     payment_service = models.CharField(max_length=30, unique=True)
     payment_type = models.CharField(max_length=50, verbose_name='type_of_payment')
     commission = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __str__(self):
         return f'Type of payment: {self.payment_type}' f'Commission amount: {self.commission}'
-
-    @property
-    def cache_key(self):
-        return f'unique_key_{self.payment_service_id.name}_{self.payment_type}'

@@ -6,7 +6,10 @@
     <div class="container py-5">
       <p class="text-center h1 fw-bold mb-5 mx-1 mx-md-4 mt-4">My Bookings</p>
       <div class="row justify-content-center mb-3">
-        <div class="col-md-12 col-xl-10" v-for="(booking, index) in bookingsStore.bookings.items" :key="index">
+        <div v-if="!token">
+          <p class="text-center h3 mt-5" style="color: blue;">Log in to see your bookings.</p>
+        </div>
+        <div class="col-md-12 col-xl-10" v-else v-for="(booking, index) in bookingsStore.bookings.items" :key="index">
           <div class="card shadow-0 border rounded-3">
             <div class="card-body">
               <div class="row">
@@ -65,6 +68,12 @@
                       <span :style="{ color: booking.closing_date < booking.return_date ? 'green' : 'red' }"> {{ booking.closing_date }}</span>
                     </p>
                     <span style="color: red" v-else>Booking not closed yet</span>
+                  </h6>
+                        <h6>
+                    <p v-if="booking.is_paid">
+                      <span style="color: green;"> Booking is paid </span>
+                    </p>
+                    <span style="color: red" v-else>Booking is not paid</span>
                   </h6>
                   <div class="d-flex flex-column mt-4">
                     <button class="btn btn-primary btn-sm" type="button" @click="onGame(booking.game.id)">Details</button>

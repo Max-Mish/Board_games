@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Description, Category, Game
+from .models import Description, Category, Game, GameItem
 
 
 class DescriptionSerializer(serializers.ModelSerializer):
@@ -43,3 +43,32 @@ class GameResponseSerializer(serializers.ModelSerializer):
 
 class GameQuerySerializer(serializers.Serializer):
     id = serializers.IntegerField(required=True)
+
+
+class GameItemSerializer(serializers.ModelSerializer):
+    game = GameResponseSerializer()
+
+    class Meta:
+        model = GameItem
+        fields = '__all__'
+
+
+class GameItemCreateSerializer(serializers.ModelSerializer):
+    game_id = serializers.IntegerField(required=True)
+    n_items = serializers.IntegerField()
+
+    class Meta:
+        model = GameItem
+        fields = ['game_id', 'n_items']
+
+
+class DatesCheckRequestSerializer(serializers.Serializer):
+    game_id = serializers.IntegerField()
+    amount = serializers.IntegerField()
+    booked_dates = serializers.ListField()
+
+
+class DatesCheckResponseSerializer(serializers.Serializer):
+    dates_check_status = serializers.BooleanField(required=True)
+    message = serializers.CharField()
+    items_ids = serializers.ListField(child=serializers.UUIDField())

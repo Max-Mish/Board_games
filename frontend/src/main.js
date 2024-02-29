@@ -4,6 +4,8 @@ import {createApp} from 'vue';
 import {createPinia} from 'pinia';
 import VueCookies from 'vue3-cookies';
 import piniaPluginPersistedState from "pinia-plugin-persistedstate"
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css'
 
 import App from '@/App.vue';
 import router from '@/router.js';
@@ -20,6 +22,7 @@ app.use(VueCookies, {
     secure: true,
     sameSite: "None"
 });
+app.component('VueDatePicker', VueDatePicker);
 app.mount('#app');
 
 import 'bootstrap/dist/js/bootstrap.js';

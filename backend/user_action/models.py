@@ -1,21 +1,21 @@
-from datetime import timedelta, date
-
 from django.db import models
 from django.db.models import F
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from authentication.models import CustomUser
-from game.models import Game
+from game.models import Game, GameItem
 from poll.models import Choice
 
 
 class Booking(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    game_item = models.ForeignKey(GameItem, on_delete=models.CASCADE)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    opening_date = models.DateField(auto_now_add=True)
+    opening_date = models.DateField()
     closing_date = models.DateField(blank=True, null=True)
     return_date = models.DateField()
+    is_paid = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.user} | {self.game}'

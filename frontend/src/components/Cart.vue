@@ -44,18 +44,30 @@
                           <div style="width: 80px;">
                             <h5 class="mb-0">{{ item.cost }}$</h5>
                           </div>
-                          <button type="button" class="btn btn-info btn-block btn-lg">
-                            <div class="d-flex justify-content-between">
-                              <span>Choose Period</span>
-                            </div>
-                          </button>
+                          <datePicker
+                              :model-value="itemsInfo[item.id][1]"
+                              @update:model-value="(modelData) => handleDate(modelData, item.count, item.id)"
+                              required
+                              disable-year-select
+                              prevent-min-max-navigation
+                              ignore-time-validation
+                              :range="{ minRange:3, maxRange:14, noDisabledRange: true}"
+                              :min-date="new Date()"
+                              :max-date="new Date(new Date().setDate(new Date().getDate() + 60))"
+                              :state="datesState[item.id]"
+                              :clearable="false"
+                              :enable-time-picker="false"
+
+                          ></datePicker>
+                          <alert :message=dateInputMessage[item.id] v-if="showDateInputMessage[item.id]"></alert>
                           <a class="btn btn-black btn-rounded" href="" style="color: #cecece;"
                              @click="onRemove(item)"><i class="fas fa-trash-alt"></i></a>
                         </div>
                       </div>
                     </div>
                   </div>
-
+                  <alert message='Please select valid dates for bookings.'
+                         v-if="showDateErrorMessage"></alert>
                 </div>
                 <div class="col-lg-5">
 
@@ -89,9 +101,10 @@
                         </div>
 
                         <div class="form-outline form-white mb-4">
-                          <input type="text" id="typeText" class="form-control form-control-lg" siez="17"
-                                 placeholder="Georgia, Atlanta" minlength="19" maxlength="19" v-model="inputForm.stateCity"/>
-                          <label class=" form-label" for="typeText">State and City</label>
+                          <input type="text" id="typeTextStateCity" class="form-control form-control-lg" siez="17"
+                                 placeholder="Georgia, Atlanta" minlength="19" maxlength="19"
+                                 v-model="inputForm.stateCity"/>
+                          <label class=" form-label" for="typeTextStateCity">State and City</label>
                         </div>
 
                         <div class="row mb-4">
@@ -105,10 +118,11 @@
                           </div>
                           <div class="col-md-6">
                             <div class="form-outline form-white">
-                              <input type="password" id="typeText" class="form-control form-control-lg"
-                                     placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" size="1" minlength="4" maxlength="6"
+                              <input type="password" id="typeTextIndex" class="form-control form-control-lg"
+                                     placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" size="1" minlength="4"
+                                     maxlength="6"
                                      v-model="inputForm.index"/>
-                              <label class="form-label" for="typeText">Index</label>
+                              <label class="form-label" for="typeTextIndex">Index</label>
                             </div>
                           </div>
                         </div>
@@ -132,7 +146,8 @@
                         <p class="mb-2">${{ cartStore.totalCost }}</p>
                       </div>
 
-                      <alert message='Please ensure all required fields are filled in before proceeding.' v-if="showInputMessage"></alert>
+                      <alert message='Please ensure all required fields are filled in before proceeding.'
+                             v-if="showInputMessage"></alert>
                       <span v-if="!cartStore.shippingService">Please select a delivery service.</span>
                       <button type="button" class="btn btn-info btn-block btn-lg" v-else @click="onCheckout">
                         <div class="d-flex justify-content-between">
@@ -143,11 +158,8 @@
 
                     </div>
                   </div>
-
                 </div>
-
               </div>
-
             </div>
           </div>
         </div>
@@ -165,6 +177,10 @@ import Navigation from "@/components/Navigation.vue";
 import FooterSmall from "@/components/FooterSmall.vue";
 import {useCartStore} from "@/stores/cart.js"
 import {useProfileStore} from "@/stores/profile.js";
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css'
+import {baseApiUrl} from "@/services/baseApi.js";
+import axios from "axios";
 
 export default {
 
@@ -174,6 +190,11 @@ export default {
       cartStore: '',
       profileStore: '',
       showInputMessage: false,
+      itemsInfo: {},
+      datesState: {},
+      dateInputMessage: {},
+      showDateInputMessage: {},
+      showDateErrorMessage: false,
       inputForm: {
         streetHouseApp: "",
         stateCity: "",
@@ -187,6 +208,7 @@ export default {
     alert: Alert,
     navigation: Navigation,
     footerSmall: FooterSmall,
+    datePicker: VueDatePicker,
   },
   methods: {
     onBack() {
@@ -197,8 +219,15 @@ export default {
     },
     onCheckout() {
       const deliveryData = this.getDeliveryData();
+      const payload = this.makeBookingsPayload();
+      if (deliveryData && payload) {
+        this.makeBookings(payload)
+        // прокидываем дальше delivery_data
+        // this.$router.push({name: 'Checkout'});
+      }
     },
     getDeliveryData() {
+      this.showInputMessage = false;
       if (this.inputForm.streetHouseApp && this.inputForm.stateCity && this.inputForm.country && this.inputForm.index) {
         return {
           streetHouseApp: this.inputForm.streetHouseApp,
@@ -210,10 +239,81 @@ export default {
         this.showInputMessage = true;
       }
     },
+    handleDate(modelData, count, id) {
+      this.showDateErrorMessage = false;
+      this.itemsInfo[id] = [count, modelData];
+      const payload = {
+        game_id: id,
+        amount: count,
+        booked_dates: modelData.map(date => date.toUTCString())
+      };
+      console.log(payload)
+      const path = `${baseApiUrl}/games/items/check_dates`;
+      axios.post(path, payload)
+          .then((res) => {
+            if (res.data.dates_check_status === false) {
+              this.datesState[id] = false;
+              this.dateInputMessage[id] = res.data.message;
+              this.showDateInputMessage[id] = true;
+            } else {
+              this.datesState[id] = true;
+              this.itemsInfo[id][2] = res.data.items_ids
+              this.showDateInputMessage[id] = false;
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+            this.showDateErrorMessage = true;
+          });
+
+    },
+    makeBookingsPayload() {
+      this.showDateErrorMessage = false
+      const payload = [];
+
+      for (const [game_id, [quantity, [opening_date, return_date], game_item_ids]] of Object.entries(this.itemsInfo)) {
+        if (!game_item_ids || game_item_ids.length === 0 || game_item_ids.length < quantity) {
+          this.showDateErrorMessage = true;
+          return;
+        }
+
+        for (let i = 0; i < quantity; i++) {
+          payload.push({
+            "game_id": game_id,
+            "game_item_id": game_item_ids[i],
+            "opening_date": opening_date.toUTCString(),
+            "return_date": return_date.toUTCString()
+          });
+        }
+      }
+      console.log(payload)
+      return payload
+    },
+    makeBookings(payload) {
+      const path = `${baseApiUrl}/user_actions/booking/`;
+      axios.post(path, payload, {
+        headers: {"Authorization": `Bearer ${this.$cookies.get('token')}`}
+      }).then((res) => {
+            console.log(res)
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+    },
   },
   created() {
     this.cartStore = useCartStore(this.$pinia);
     this.profileStore = useProfileStore(this.$pinia);
+
+    const startDate = new Date();
+    const endDate = new Date(new Date().setDate(startDate.getDate() + 7));
+    const defaultDate = [startDate, endDate];
+    for (const item of this.cartStore.items) {
+      this.itemsInfo[item.id] = [item.count, defaultDate, []]
+      this.datesState[item.id] = null
+      this.showDateInputMessage[item.id] = false
+      this.dateInputMessage[item.id] = ''
+    }
   },
 }
 </script>

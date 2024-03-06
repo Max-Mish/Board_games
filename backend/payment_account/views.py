@@ -7,11 +7,18 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
 from purchase.models import Invoice
-from .models import Account, BalanceChange
+from .models import Account, BalanceChange, PaymentCommission
 from .serializers import CalculateCommissionSerializer, BalanceIncreaseSerializer, AccountSerializer, UUIDSerializer, \
-    BalanceSerializer, YookassaPaymentAcceptanceSerializer
+    BalanceSerializer, YookassaPaymentAcceptanceSerializer, PaymentServiceSerializer
 from .services import PaymentCalculation, request_balance_deposit_url, check_yookassa_response, \
     proceed_payment_response
+
+
+class PaymentServicesAPIView(generics.GenericAPIView):
+    @swagger_auto_schema(responses={200: PaymentServiceSerializer(many=True)})
+    def get(self, request):
+        queryset = PaymentCommission.objects.all().order_by('-id')
+        return Response(data=PaymentServiceSerializer(queryset, many=True).data, status=status.HTTP_200_OK)
 
 
 class CalculatePaymentCommissionAPIView(CreateAPIView):

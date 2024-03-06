@@ -44,5 +44,5 @@ urlpatterns = [
     path('polls/', include('poll.urls', namespace='poll')),
     path('payment_accounts/', include('payment_account.urls', namespace='payment_account')),
     path('purchases/', include('purchase.urls', namespace='purchase')),
-
+    path('stores/', include('store.urls', namespace='store')),
 ]

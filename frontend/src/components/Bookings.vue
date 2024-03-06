@@ -117,7 +117,7 @@ export default {
   },
   methods: {
     getBookings() {
-      const path = `${baseApiUrl}/user_actions/user_action/booking/`;
+      const path = `${baseApiUrl}/user_actions/booking/`;
       this.token = this.$cookies.get('token');
       axios.get(path, {
         headers: {"Authorization": `Bearer ${this.token}`}

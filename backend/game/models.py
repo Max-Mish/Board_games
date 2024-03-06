@@ -47,6 +47,9 @@ class Game(models.Model):
 class BookedDate(models.Model):
     date = models.DateField()
 
+    def __str__(self):
+        return self.date.strftime('%a, %d %b %Y')
+
 
 class GameItem(models.Model):
     id = models.UUIDField(
@@ -64,4 +67,3 @@ class GameItem(models.Model):
             self.booked_dates.remove(booked_date)
         except BookedDate.DoesNotExist:
             pass
-

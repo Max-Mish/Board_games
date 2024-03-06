@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework import serializers
 
-from .models import Account
+from .models import Account, PaymentCommission
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -24,6 +24,12 @@ class CalculateCommissionSerializer(serializers.Serializer):
                                               decimal_places=2,
                                               validators=[MinValueValidator(0, message='Insufficient Funds')],
                                               )
+
+
+class PaymentServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentCommission
+        fields = ('payment_service',)
 
 
 class YookassaMoneySerializer(serializers.Serializer):

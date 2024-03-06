@@ -1,21 +1,9 @@
-from datetime import datetime
-
 from rest_framework import serializers
 
 from authentication.serializers import ProfileInfoSerializer
+from core.fields import UTCDateField
 from game.serializers import GameResponseSerializer
 from .models import Booking, Vote
-
-
-class UTCDateField(serializers.DateField):
-    def to_representation(self, value):
-        return value.strftime('%a, %d %b %Y %H:%M:%S UTC')
-
-    def to_internal_value(self, data):
-        try:
-            return datetime.strptime(data, "%a, %d %b %Y %H:%M:%S %Z").date()
-        except ValueError:
-            raise serializers.ValidationError("Invalid date format, should be YYYY-MM-DD")
 
 
 class BookingRequestSerializer(serializers.ModelSerializer):

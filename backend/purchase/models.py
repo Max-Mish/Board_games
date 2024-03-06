@@ -74,6 +74,8 @@ class Invoice(models.Model):
         editable=False,
         db_index=True,
     )
+    delivery_data = models.TextField()
+    delivery_service = models.CharField(max_length=50)
 
     @property
     def items_sum_price(self):

@@ -16,6 +16,18 @@ services:
     depends_on:
       - pgdb
 
+  vue:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: frontend
+    ports:
+      - '8080:8080'
+    env_file:
+      - frontend/.env
+    depends_on:
+      - django
+
   pgdb:
     image: postgres:latest
     restart: always
@@ -28,6 +40,8 @@ services:
     container_name: pgdb
     ports:
       - '5432:5432'
+    expose:
+      - 5432
     volumes:
       - pgdbData:/var/lib/postgresql/data/
     deploy:

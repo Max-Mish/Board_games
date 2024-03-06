@@ -1,13 +1,15 @@
 from django.contrib.auth.decorators import permission_required
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import serializers
 from rest_framework import status, generics
 from rest_framework.response import Response
 
+from core.fields import UTCDateField
 from .models import Game, Category, Description, GameItem
 from .serializers import GameRequestSerializer, GameResponseSerializer, CategoryResponseSerializer, GameQuerySerializer, \
     DatesCheckRequestSerializer, DatesCheckResponseSerializer, GameItemCreateSerializer, GameItemSerializer
-from .services import get_all_dates, get_available_game_items, pack_response_serializer
+from .services import get_all_dates, get_available_game_items, pack_response_serializer, get_disabled_dates
 
 
 class RelatedGamesAPIView(generics.ListAPIView):
@@ -119,7 +121,7 @@ class GameItemCreateAPIView(generics.GenericAPIView):
 
 
 class DatesCheckAPIView(generics.GenericAPIView):
-    @swagger_auto_schema(request_body=DatesCheckRequestSerializer(), responses={201: DatesCheckResponseSerializer()})
+    @swagger_auto_schema(request_body=DatesCheckRequestSerializer(), responses={200: DatesCheckResponseSerializer()})
     def post(self, request):
         serializer = DatesCheckRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -132,3 +134,21 @@ class DatesCheckAPIView(generics.GenericAPIView):
         available_items = get_available_game_items(game_id, booked_dates)
         response_serializer_data = pack_response_serializer(available_items, amount)
         return Response(data=response_serializer_data, status=status.HTTP_200_OK)
+
+
+class FullyBookedDaysAPIView(generics.GenericAPIView):
+    class FullyBookedDaysRequestSerializer(serializers.Serializer):
+        game_id = serializers.IntegerField()
+
+    class FullyBookedDaysResponseSerializer(serializers.Serializer):
+        dates = serializers.ListField(child=UTCDateField())
+
+    @swagger_auto_schema(request_body=FullyBookedDaysRequestSerializer(),
+                         responses={200: FullyBookedDaysResponseSerializer()})
+    def post(self, request):
+        serializer = self.FullyBookedDaysRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        booked_dates = get_disabled_dates(serializer.validated_data['game_id'])
+        return Response(data=self.FullyBookedDaysResponseSerializer({'dates': booked_dates}).data,
+                        status=status.HTTP_200_OK)

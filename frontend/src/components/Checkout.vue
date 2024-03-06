@@ -28,7 +28,7 @@
                 </div>
                 <div class="d-flex flex-row align-items-center">
                   <sup class="dollar font-weight-bold text-muted">$</sup>
-                  <span class="h2 mx-1 mb-0">{{priceWithBalance}}</span>
+                  <span class="h2 mx-1 mb-0">{{ priceWithBalance }}</span>
                   <span class="text-muted font-weight-bold mt-2">/ year</span>
                 </div>
               </div>
@@ -45,7 +45,7 @@
                 </div>
                 <div class="d-flex flex-row align-items-center">
                   <sup class="dollar font-weight-bold text-muted">$</sup>
-                  <span class="h2 mx-1 mb-0">{{priceWithYookassa}}</span>
+                  <span class="h2 mx-1 mb-0">{{ priceWithYookassa }}</span>
                   <span class="text-muted font-weight-bold mt-2">/ year</span>
                 </div>
               </div>
@@ -87,9 +87,9 @@ import Alert from '@/components/Alert.vue';
 import Navigation from "@/components/Navigation.vue";
 import FooterSmall from "@/components/FooterSmall.vue";
 import {useProfileStore} from "@/stores/profile.js";
+import {useCheckoutsStore} from "@/stores/checkouts.js";
 import {baseApiUrl} from "@/services/baseApi.js";
 import axios from "axios";
-import {useCartStore} from "@/stores/cart.js";
 
 export default {
 
@@ -97,7 +97,8 @@ export default {
   data() {
     return {
       profileStore: '',
-      cartStore: '',
+      checkoutsStore: '',
+      checkout: {},
       withBalance: false,
       balanceInfo: [],
       priceWithYookassa: 0,
@@ -126,7 +127,7 @@ export default {
       const payload = {
         "payment_type": "bank_card",
         "payment_service": service,
-        "payment_amount": this.cartStore.totalCost,
+        "payment_amount": this.checkout.totalCost,
       };
       axios.post(path, payload, {
         headers: {"Authorization": `Bearer ${this.$cookies.get('token')}`}
@@ -143,7 +144,8 @@ export default {
   },
   created() {
     this.profileStore = useProfileStore(this.$pinia);
-    this.cartStore = useCartStore(this.$pinia);
+    this.checkoutsStore = useCheckoutsStore(this.$pinia);
+    this.checkout = this.checkoutsStore.items[this.checkoutsStore.items.length - 1];
     this.getBalance();
     this.calculatePriceCommission('yookassa');
     this.calculatePriceCommission('from_balance');

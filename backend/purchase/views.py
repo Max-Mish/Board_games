@@ -1,7 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, viewsets
+from rest_framework import serializers
+from rest_framework import status, viewsets, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -35,3 +36,20 @@ class PurchaseItemView(viewsets.ViewSet):
 
         response = item_purchase_request.request_items_purchase(request)
         return Response({'response': response}, status=status.HTTP_200_OK)
+
+
+class DeliveryServiceAPIView(generics.GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    class DeliveryServiceSerializer(serializers.Serializer):
+        name = serializers.CharField()
+        address = serializers.CharField()
+
+    @swagger_auto_schema(request_body=DeliveryServiceSerializer(),
+                         responses={201: 'Delivery cost returned'})
+    def post(self, request):
+        serializer = self.DeliveryServiceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        methods_cost = {'DHL': 5, 'UPS': 3, 'FedEx': 4, 'Yandex': 7, 'Pickup': 0}
+        return Response({'delivery_cost': methods_cost[data['name']]})

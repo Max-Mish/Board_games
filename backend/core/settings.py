@@ -26,6 +26,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,8 +46,25 @@ INSTALLED_APPS = [
     'user_action',
     'payment_account',
     'purchase',
-
+    'store'
 ]
+
+JAZZMIN_SETTINGS = {
+    # title of the window (Will default to current_admin_site.site_title if absent or None)
+    "site_title": "Board games Admin",
+
+    # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
+    "site_header": "Board games",
+
+    # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
+    "site_brand": "Board games",
+
+    # Copyright on the footer
+    "copyright": "Board games",
+
+    # # Field name on user model that contains avatar ImageField/URLField/Charfield or a callable that receives the user
+    # "user_avatar": "cover_image",
+}
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=180),
@@ -145,9 +163,9 @@ DATABASES = {
         'PASSWORD': env.str('SQL_PASSWORD'),
         'HOST': env.str('SQL_HOST'),
         'PORT': env.str('SQL_PORT'),
-        # 'default': {
-        #     'ENGINE': 'django.db.backends.sqlite3',
-        #     'NAME': BASE_DIR / 'db.sqlite3',
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

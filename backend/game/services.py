@@ -2,19 +2,23 @@ from datetime import timedelta, datetime
 
 from django.db.models import Count
 
-from game.models import GameItem
+from game.models import GameItem, BookedDate
 from game.serializers import DatesCheckResponseSerializer
 
 
 def get_all_dates(date_period: list) -> list:
-    date_start, date_end = [datetime.strptime(date, "%a, %d %b %Y %H:%M:%S %Z").date() for date in date_period]
+    date_start, date_end = [datetime.strptime(date, "%a %b %d %Y").date() for date in date_period]
     return [date_start + timedelta(days=i) for i in range((date_end - date_start).days + 1)]
 
 
 def get_available_game_items(game_id, dates: list):
     game_items = GameItem.objects.filter(game_id=game_id)
-    available_game_items = game_items.exclude(booked_dates__date__in=dates).annotate(
-        num_booked_dates=Count('booked_dates')).filter(num_booked_dates=0)
+    available_game_items = []
+    for game_item in game_items:
+        booked_dates = BookedDate.objects.filter(gameitem=game_item)
+        booked_dates_list = list(booked_dates.values_list('date', flat=True))
+        if not any(date in dates for date in booked_dates_list):
+            available_game_items.append(game_item)
     return available_game_items
 
 
@@ -36,3 +40,17 @@ def pack_response_serializer(items, amount):
     })
     serializer.is_valid(raise_exception=True)
     return serializer.data
+
+
+def get_disabled_dates(game_id):
+    total_count = GameItem.objects.filter(game_id=game_id).count()
+
+    fully_booked_dates = BookedDate.objects.filter(
+        gameitem__game_id=game_id
+    ).annotate(
+        booked_count=Count('gameitem')
+    ).filter(
+        booked_count=total_count
+    )
+
+    return list(fully_booked_dates.values_list('date', flat=True))
